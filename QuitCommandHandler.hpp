@@ -6,8 +6,8 @@
 
 class QuitCommandHandler : public CommandHandler {
 public:
-    QuitCommandHandler(Server& server) : CommandHandler(server) {}
-    virtual void handle(Client& client, const Message& message);
+	QuitCommandHandler(Server& server) : CommandHandler(server) {}
+	virtual void handle(Client& client, const Message& message);
 };
 
 #endif // QUITCOMMANDHANDLER_HPP

@@ -1,4 +1,4 @@
-NAME			= 	ft_irc
+NAME			= 	ircserv
 
 SOURCE			= 	main.cpp Server.cpp Client.cpp NickCommandHandler.cpp QuitCommandHandler.cpp UserCommandHandler.cpp Message.cpp Channel.cpp
 

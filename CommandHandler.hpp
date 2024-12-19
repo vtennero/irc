@@ -4,14 +4,16 @@
 #include "Client.hpp"
 #include "Message.hpp"
 
+class Server;
+
 class CommandHandler {
 protected:
-    Server& server;
+	Server& server;
 
 public:
-    CommandHandler(Server& server) : server(server) {}
-    virtual ~CommandHandler() {}
-    virtual void handle(Client& client, const Message& message) = 0;
+	CommandHandler(Server& server) : server(server) {}
+	virtual ~CommandHandler() {}
+	virtual void handle(Client& client, const Message& message) = 0;
 };
 
 #endif // COMMANDHANDLER_HPP
