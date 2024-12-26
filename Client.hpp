@@ -7,10 +7,10 @@
 class Client {
 private:
 	int fd;
+	std::string hostname;
 	std::string nickname;
 	std::string username;
 	std::string realname;
-	std::string hostname;
 	bool authenticated;
 	bool registered;
 	std::string messageBuffer;

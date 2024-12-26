@@ -1,6 +1,6 @@
 NAME			= 	ircserv
 
-SOURCE			= 	main.cpp Server.cpp Client.cpp NickCommandHandler.cpp QuitCommandHandler.cpp UserCommandHandler.cpp Message.cpp Channel.cpp
+SOURCE			= 	main.cpp Server.cpp Client.cpp NickCommandHandler.cpp QuitCommandHandler.cpp UserCommandHandler.cpp Message.cpp Channel.cpp PrivmsgCommandHandler.cpp
 
 OBJECT			=	$(SOURCE:.cpp=.o)
 

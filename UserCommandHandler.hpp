@@ -5,10 +5,10 @@
 
 class UserCommandHandler : public CommandHandler {
 public:
-    UserCommandHandler(Server& server) : CommandHandler(server) {}
-    virtual void handle(Client& client, const Message& message);
+	UserCommandHandler(Server& server) : CommandHandler(server) {}
+	virtual void handle(Client& client, const Message& message);
 private:
-    void sendWelcomeMessages(Client& client);
+	void sendWelcomeMessages(Client& client);
 };
 
 #endif // USERCOMMANDHANDLER_HPP

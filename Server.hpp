@@ -5,43 +5,57 @@
 #include <sys/poll.h>
 #include <cstddef>
 #include <string>
+#include <iostream>
 #include "Client.hpp"
 #include "Channel.hpp"
 #include "CommandHandler.hpp"
 #include <map>
 
-class Server {
+using std::string;
+using std::vector;
+using std::map;
+using std::cerr;
+using std::cout;
+using std::endl;
+
+class Server
+{
 private:
 	int serverSocket;
 
-	std::vector<pollfd> clientFds;
+	vector<pollfd> clientFds;
 	static const int MAX_CLIENTS = 100;
-	std::string serverPassword;
-	std::vector<bool> clientAuthenticated;
-	std::map<std::string, CommandHandler*> commandHandlers;
-	std::map<int, Client> clients;
-	std::map<std::string, Channel> channels;
-
+	string serverPassword;
+	vector<bool> clientAuthenticated;
+	map<string, CommandHandler*> commandHandlers;
+	map<int, Client> clients;
+	map<string, Channel> channels;
 
 	void setNonBlocking(int socket);
 	void handleNewConnection();
 	void handleClientData(size_t index);
-	bool authenticateClient(const std::string& password, int clientFd);
+	bool authenticateClient(const string& password, int clientFd);
 
 public:
-	Server(int port, const std::string& password);
+	Server(int port, const string& password);
 	~Server();
 	void run();
 
-	static std::string getServerName();
-	static std::string getVersion();
-	static std::string getCreationDate();
+	static string getServerName();
+	static string getVersion();
+	static string getCreationDate();
 
 	void removeClient(int fd);
-	std::vector<Channel*> getClientChannels(const Client& client);
-	void broadcastMessage(const std::string& message, const Client* exclude = NULL);
-    bool isNicknameInUse(const std::string& nickname) const;
+	vector<Channel*> getClientChannels(const Client& client);
+	void broadcastMessage(const string& message, const Client* exclude = NULL);
+	bool isNicknameInUse(const string& nickname) const;
 
+	void sendToClient(const std::string& nickname, const std::string& message);
+	void broadcastToChannel(const std::string& channelName, const std::string& message, const Client* exclude = NULL);
+
+	Client* findClientByNickname(const std::string& nickname);
+    bool isChannelExist(const std::string& channelName) const;
+    Channel* getChannel(const std::string& channelName);
 };
 
-#endif // SERVER_HPP
+#endif

@@ -4,6 +4,7 @@
 #include "NickCommandHandler.hpp"
 #include "UserCommandHandler.hpp"
 #include "QuitCommandHandler.hpp"
+#include "PrivmsgCommandHandler.hpp"
 
 #include <iostream>
 #include <cstring>
@@ -16,26 +17,72 @@
 #include <sstream>
 #include <algorithm>
 
+// privmsg
+void Server::sendToClient(const std::string& nickname, const std::string& message) {
+	for (map<int, Client>::iterator it = clients.begin(); it != clients.end(); ++it) {
+		if (it->second.getNickname() == nickname) {
+			it->second.send(message);
+			return;
+		}
+	}
+}
 
-// Helper function for std::find_if
-struct FdComparer {
-	FdComparer(int fd) : fd_to_find(fd) {}
-	bool operator()(const pollfd& pfd) const {
+void Server::broadcastToChannel(const std::string& channelName, const std::string& message, const Client* exclude) {
+	map<string, Channel>::iterator it = channels.find(channelName);
+	if (it != channels.end()) {
+		it->second.broadcastMessage(message, exclude);
+	}
+}
+
+Client* Server::findClientByNickname(const std::string& nickname) {
+    for (map<int, Client>::iterator it = clients.begin(); it != clients.end(); ++it) {
+        if (it->second.getNickname() == nickname) {
+            return &(it->second);
+        }
+    }
+    return NULL;
+}
+
+bool Server::isChannelExist(const std::string& channelName) const {
+    return channels.find(channelName) != channels.end();
+}
+
+Channel* Server::getChannel(const std::string& channelName) {
+    map<string, Channel>::iterator it = channels.find(channelName);
+    if (it != channels.end()) {
+        return &(it->second);
+    }
+    return NULL;
+}
+
+// Helper function for find_if
+struct FdComparer
+{
+	FdComparer(int fd) : fd_to_find(fd)
+	{}
+	bool operator()(const pollfd& pfd) const
+	{
 		return pfd.fd == fd_to_find;
 	}
 	int fd_to_find;
 };
 
-void Server::setNonBlocking(int fd) {
-	if (fcntl(fd, F_SETFL, O_NONBLOCK) == -1) {
-		std::cerr << "Error setting socket to non-blocking: " << strerror(errno) << std::endl;
+void Server::setNonBlocking(int fd)
+{
+	cout << "[DEBUG] function setNonBlocking called" << endl;
+	if (fcntl(fd, F_SETFL, O_NONBLOCK) == -1)
+	{
+		cerr << "Error setting socket to non-blocking: " << strerror(errno) << endl;
 	}
 }
 
-Server::Server(int port, const std::string& password) : serverSocket(-1), serverPassword(password) {
+Server::Server(int port, const string& password) : serverSocket(-1), serverPassword(password)
+{
+	cout << "[DEBUG] function Server constructor called" << endl;
 	serverSocket = socket(AF_INET, SOCK_STREAM, 0);
-	if (serverSocket == -1) {
-		std::cerr << "Error creating socket: " << strerror(errno) << std::endl;
+	if (serverSocket == -1)
+	{
+		cerr << "Error creating socket: " << strerror(errno) << endl;
 		return;
 	}
 
@@ -44,14 +91,16 @@ Server::Server(int port, const std::string& password) : serverSocket(-1), server
 	serverAddr.sin_addr.s_addr = INADDR_ANY;
 	serverAddr.sin_port = htons(port);
 
-	if (bind(serverSocket, (struct sockaddr*)&serverAddr, sizeof(serverAddr)) == -1) {
-		std::cerr << "Error binding socket: " << strerror(errno) << std::endl;
+	if (bind(serverSocket, (struct sockaddr*)&serverAddr, sizeof(serverAddr)) == -1)
+	{
+		cerr << "Error binding socket: " << strerror(errno) << endl;
 		close(serverSocket);
 		return;
 	}
 
-	if (listen(serverSocket, 5) == -1) {
-		std::cerr << "Error listening on socket: " << strerror(errno) << std::endl;
+	if (listen(serverSocket, 5) == -1)
+	{
+		cerr << "Error listening on socket: " << strerror(errno) << endl;
 		close(serverSocket);
 		return;
 	}
@@ -61,42 +110,56 @@ Server::Server(int port, const std::string& password) : serverSocket(-1), server
 	commandHandlers["NICK"] = new NickCommandHandler(*this);
 	commandHandlers["USER"] = new UserCommandHandler(*this);
 	commandHandlers["QUIT"] = new QuitCommandHandler(*this);
+	commandHandlers["PRIVMSG"] = new PrivmsgCommandHandler(*this);
 
-	std::cout << "Server listening on port " << port << std::endl;
+	cout << "Server listening on port " << port << endl;
 }
 
-Server::~Server() {
-	if (serverSocket != -1) {
+Server::~Server()
+{
+	cout << "[DEBUG] function Server destructor called" << endl;
+	if (serverSocket != -1)
+	{
 		close(serverSocket);
 	}
-	for (size_t i = 0; i < clientFds.size(); ++i) {
+	for (size_t i = 0; i < clientFds.size(); ++i)
+	{
 		close(clientFds[i].fd);
 	}
 
-	std::map<std::string, CommandHandler*>::iterator it;
-	for (it = commandHandlers.begin(); it != commandHandlers.end(); ++it) {
+	map<string, CommandHandler*>::iterator it;
+	for (it = commandHandlers.begin(); it != commandHandlers.end(); ++it)
+	{
 		delete it->second;
 	}
 }
 
-void Server::run() {
+void Server::run()
+{
+	cout << "[DEBUG] function run called" << endl;
 	pollfd serverPollFd;
 	serverPollFd.fd = serverSocket;
 	serverPollFd.events = POLLIN;
 	clientFds.push_back(serverPollFd);
 
-	while (true) {
+	while (true)
+	{
 		int pollResult = poll(&clientFds[0], clientFds.size(), -1);
-		if (pollResult == -1) {
-			std::cerr << "Error in poll" << std::endl;
+		if (pollResult == -1)
+		{
+			cerr << "Error in poll" << endl;
 			break;
 		}
 
-		for (size_t i = 0; i < clientFds.size(); ++i) {
-			if (clientFds[i].revents & POLLIN) {
-				if (clientFds[i].fd == serverSocket) {
+		for (size_t i = 0; i < clientFds.size(); ++i)
+		{
+			if (clientFds[i].revents & POLLIN)
+			{
+				if (clientFds[i].fd == serverSocket)
+				{
 					handleNewConnection();
-				} else {
+				} else
+				{
 					handleClientData(i);
 				}
 			}
@@ -104,80 +167,93 @@ void Server::run() {
 	}
 }
 
-void Server::handleNewConnection() {
+void Server::handleNewConnection()
+{
+	cout << "[DEBUG] function handleNewConnection called" << endl;
 	sockaddr_in clientAddr;
 	socklen_t clientAddrLen = sizeof(clientAddr);
 	int clientSocket = accept(serverSocket, (struct sockaddr*)&clientAddr, &clientAddrLen);
-	if (clientSocket == -1) {
-		std::cerr << "Error accepting client connection: " << strerror(errno) << std::endl;
+	if (clientSocket == -1)
+	{
+		cerr << "Error accepting client connection: " << strerror(errno) << endl;
 		return;
 	}
 
 	setNonBlocking(clientSocket);
 
 	char hostBuffer[INET_ADDRSTRLEN];
-	if (inet_ntop(AF_INET, &(clientAddr.sin_addr), hostBuffer, INET_ADDRSTRLEN) == NULL) {
-		std::cerr << "Error converting client address to string: " << strerror(errno) << std::endl;
+	if (inet_ntop(AF_INET, &(clientAddr.sin_addr), hostBuffer, INET_ADDRSTRLEN) == NULL)
+	{
+		cerr << "Error converting client address to string: " << strerror(errno) << endl;
 		close(clientSocket);
 		return;
 	}
 
-	clients[clientSocket] = Client(clientSocket, std::string(hostBuffer));
+	clients[clientSocket] = Client(clientSocket, string(hostBuffer));
 
 	pollfd clientPollFd;
 	clientPollFd.fd = clientSocket;
 	clientPollFd.events = POLLIN;
 	clientFds.push_back(clientPollFd);
 
-	std::cout << "New client connected: " << hostBuffer << std::endl;
+	cout << "New client connected: " << hostBuffer << endl;
 }
 
-void Server::handleClientData(size_t index) {
+void Server::handleClientData(size_t index)
+{
+	cout << "[DEBUG] function handleClientData called" << endl;
 	char buffer[1024];
 	int clientFd = clientFds[index].fd;
 	int bytesRead = recv(clientFds[index].fd, buffer, sizeof(buffer), 0);
 
-	std::cout << "DEBUG - Received bytes: " << bytesRead << std::endl;
-	std::cout << "DEBUG - Raw data: [";
-	for (int i = 0; i < bytesRead; i++) {
-		if (buffer[i] == '\r') std::cout << "\\r";
-		else if (buffer[i] == '\n') std::cout << "\\n";
-		else std::cout << buffer[i];
+	cout << "DEBUG - Received bytes: " << bytesRead << endl;
+	cout << "DEBUG - Raw data: [";
+	for (int i = 0; i < bytesRead; i++)
+	{
+		if (buffer[i] == '\r') cout << "\\r";
+		else if (buffer[i] == '\n') cout << "\\n";
+		else cout << buffer[i];
 	}
-	std::cout << "]" << std::endl;
+	cout << "]" << endl;
 
-	if (bytesRead <= 0) {
+	if (bytesRead <= 0)
+	{
 		if (bytesRead == 0)
 		{
-			std::cout << "Client disconnected" << std::endl;
+			cout << "Client disconnected" << endl;
 		}
 		else
 		{
-			std::cerr << "Error reading from client: " << strerror(errno) << std::endl;
+			cerr << "Error reading from client: " << strerror(errno) << endl;
 		}
 		close(clientFds[index].fd);
 		clientFds.erase(clientFds.begin() + index);
 	}
 	else
 	{
-		clients[clientFd].appendToBuffer(std::string(buffer, bytesRead));
+		clients[clientFd].appendToBuffer(string(buffer, bytesRead));
 
 		// Process any complete messages
-		std::vector<std::string> completeMessages = clients[clientFd].getCompleteMessages();
+		vector<string> completeMessages = clients[clientFd].getCompleteMessages();
 		for (size_t i = 0; i < completeMessages.size(); i++)
 		{
 			Message parsedMessage(completeMessages[i]);
 
 			if (parsedMessage.getCommand() == "PASS")
 			{
-				// Check if there are any parameters before accessing them
 				if (parsedMessage.getParams().empty())
 				{
 					send(clientFd, "Password required\r\n", 19, 0);
 					return;
 				}
-				std::string password = parsedMessage.getParams()[0];
-				if (authenticateClient(password, clientFd)) {
+				string password = parsedMessage.getParams()[0];
+				if (clients[clientFd].isAuthenticated())
+				{
+					cout << "Client already authenticated" << endl;
+					return;
+				}
+				if (authenticateClient(password, clientFd))
+				{
 					send(clientFd, "Password accepted\r\n", 19, 0);
 				}
 				else
@@ -194,74 +270,106 @@ void Server::handleClientData(size_t index) {
 			}
 			else
 			{
-				std::map<std::string, CommandHandler*>::iterator handler = commandHandlers.find(parsedMessage.getCommand());
-				if (handler != commandHandlers.end()) {
+				map<string, CommandHandler*>::iterator handler = commandHandlers.find(parsedMessage.getCommand());
+				if (handler != commandHandlers.end())
+				{
 					handler->second->handle(clients[clientFd], parsedMessage);
-				} else {
+				} else
+				{
 				// Unknown command
-				std::cout << "Unknown command: " << parsedMessage.getCommand() << std::endl;
+				cout << "Unknown command: " << parsedMessage.getCommand() << endl;
 				}
 			}
 		}
 	}
 }
 
-bool Server::authenticateClient(const std::string& password, int clientFd) {
-	if (password == serverPassword) {
+bool Server::authenticateClient(const string& password, int clientFd)
+{
+	cout << "[DEBUG] function authenticateClient called" << endl;
+	if (clients[clientFd].isAuthenticated())
+	{
+		cout << "Client already authenticated" << endl;
+		return true;
+	}
+	if (password == serverPassword)
+	{
 		clients[clientFd].setAuthenticated(true);
 		return true;
 	}
 	return false;
 }
 
-std::string Server::getServerName() {
+string Server::getServerName()
+{
+	cout << "[DEBUG] function getServerName called" << endl;
 	return "YourIRCServer";
 }
 
-std::string Server::getVersion() {
+string Server::getVersion()
+{
+	cout << "[DEBUG] function getVersion called" << endl;
 	return "1.0";
 }
 
-std::string Server::getCreationDate() {
+string Server::getCreationDate()
+{
+	cout << "[DEBUG] function getCreationDate called" << endl;
 	return "May 1, 2023";
 }
 
-void Server::removeClient(int fd) {
+void Server::removeClient(int fd)
+{
+	cout << "[DEBUG] function removeClient called" << endl;
 	// Remove the client from the clients map
-	std::map<int, Client>::iterator it = clients.find(fd);
-	if (it != clients.end()) {
+	map<int, Client>::iterator it = clients.find(fd);
+	if (it != clients.end())
+	{
 		clients.erase(it);
 	}
 
 	// Remove the client's file descriptor from the pollfd vector
-	std::vector<pollfd>::iterator pollIt = std::find_if(clientFds.begin(), clientFds.end(), FdComparer(fd));
-	if (pollIt != clientFds.end()) {
+	vector<pollfd>::iterator pollIt = find_if(clientFds.begin(), clientFds.end(), FdComparer(fd));
+	if (pollIt != clientFds.end())
+	{
 		clientFds.erase(pollIt);
 	}
 }
 
-std::vector<Channel*> Server::getClientChannels(const Client& client) {
-	std::vector<Channel*> clientChannels;
-	for (std::map<std::string, Channel>::iterator it = channels.begin(); it != channels.end(); ++it) {
-		if (it->second.hasClient(&client)) {
+vector<Channel*> Server::getClientChannels(const Client& client)
+{
+	cout << "[DEBUG] function getClientChannels called" << endl;
+	vector<Channel*> clientChannels;
+	for (map<string, Channel>::iterator it = channels.begin(); it != channels.end(); ++it)
+	{
+		if (it->second.hasClient(&client))
+		{
 			clientChannels.push_back(&(it->second));
 		}
 	}
 	return clientChannels;
 }
 
-void Server::broadcastMessage(const std::string& message, const Client* exclude) {
-	for (std::map<int, Client>::iterator it = clients.begin(); it != clients.end(); ++it) {
-		if (&(it->second) != exclude) {
+void Server::broadcastMessage(const string& message, const Client* exclude)
+{
+	cout << "[DEBUG] function broadcastMessage called" << endl;
+	for (map<int, Client>::iterator it = clients.begin(); it != clients.end(); ++it)
+	{
+		if (&(it->second) != exclude)
+		{
 			it->second.send(message);
 		}
 	}
 }
 
-bool Server::isNicknameInUse(const std::string& nickname) const {
-	std::map<int, Client>::const_iterator it;
-	for (it = clients.begin(); it != clients.end(); ++it) {
-		if (it->second.getNickname() == nickname) {
+bool Server::isNicknameInUse(const string& nickname) const
+{
+	cout << "[DEBUG] function isNicknameInUse called" << endl;
+	map<int, Client>::const_iterator it;
+	for (it = clients.begin(); it != clients.end(); ++it)
+	{
+		if (it->second.getNickname() == nickname)
+		{
 			return true;
 		}
 	}
