@@ -4,28 +4,51 @@
 
 Message::Message(const std::string& rawMessage) {
 	std::cout << "[DEBUG] function Message constructor called with raw message: " << rawMessage << std::endl;
-	std::istringstream iss(rawMessage);
-	std::string token;
+	std::string msg = rawMessage;
+	size_t pos = 0;
 
-	if (rawMessage[0] == ':') {
-		iss >> prefix;
-		prefix = prefix.substr(1);
-		std::cout << "[DEBUG] Parsed prefix: " << prefix << std::endl;
+	// Handle prefix if exists (starts with :)
+	if (!msg.empty() && msg[0] == ':') {
+		pos = msg.find(' ');
+		if (pos != std::string::npos) {
+			prefix = msg.substr(1, pos - 1);
+			msg = msg.substr(pos + 1);
+		}
 	}
 
-	iss >> command;
-	std::cout << "[DEBUG] Parsed command: " << command << std::endl;
+	// Parse command
+	pos = msg.find(' ');
+	if (pos != std::string::npos) {
+		command = msg.substr(0, pos);
+		msg = msg.substr(pos + 1);
+	} else {
+		command = msg;
+		return;
+	}
 
-	while (iss >> token) {
-		if (token[0] == ':') {
-			std::string trailing = token.substr(1);
-			std::getline(iss, token);
-			trailing += token;
-			params.push_back(trailing);
-			std::cout << "[DEBUG] Added trailing parameter: " << trailing << std::endl;
+	// Parse parameters
+	while (!msg.empty()) {
+		// If we encounter a :, the rest is the trailing parameter
+		if (msg[0] == ':') {
+			params.push_back(msg.substr(1)); // Store everything after the colon
+			std::cout << "[DEBUG] Added trailing parameter: " << msg.substr(1) << std::endl;
 			break;
 		}
-		params.push_back(token);
-		std::cout << "[DEBUG] Added parameter: " << token << std::endl;
+
+		pos = msg.find(' ');
+		if (pos != std::string::npos) {
+			std::string param = msg.substr(0, pos);
+			if (!param.empty()) {
+				params.push_back(param);
+				std::cout << "[DEBUG] Added parameter: " << param << std::endl;
+			}
+			msg = msg.substr(pos + 1);
+		} else {
+			if (!msg.empty()) {
+				params.push_back(msg);
+				std::cout << "[DEBUG] Added final parameter: " << msg << std::endl;
+			}
+			break;
+		}
 	}
 }

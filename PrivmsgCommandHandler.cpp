@@ -5,12 +5,6 @@
 #include "Message.hpp"
 #include <iostream>
 
-// static std::string trim(const std::string& str) {
-//     size_t first = str.find_first_not_of(" \t");
-//     if (first == std::string::npos) return "";
-//     size_t last = str.find_last_not_of(" \t");
-//     return str.substr(first, last - first + 1);
-// }
 
 void PrivmsgCommandHandler::handle(Client& client, const Message& message) {
 	if (!client.isRegistered()) {
@@ -19,29 +13,17 @@ void PrivmsgCommandHandler::handle(Client& client, const Message& message) {
 	}
 
 	// Check parameters
+	if (message.getParams().empty()) {
+		client.send("411 " + client.getNickname() + " :No recipient given (PRIVMSG)\r\n");
+		return;
+	}
 	if (message.getParams().size() < 2) {
-		client.send("461 " + client.getNickname() + " PRIVMSG :Not enough parameters\r\n");
+		client.send("412 " + client.getNickname() + " :No text to send\r\n");
 		return;
 	}
 
 	std::string target = message.getParams()[0];
-	// Take only the actual message part without duplication
 	std::string msgText = message.getParams()[1];
-	size_t colonPos = msgText.find(':');
-	if (colonPos != std::string::npos) {
-		// Extract only the text after the colon
-		msgText = msgText.substr(colonPos + 1);
-	}
-
-	// Handle empty target or message
-	if (target.empty()) {
-		client.send("411 " + client.getNickname() + " :No recipient given (PRIVMSG)\r\n");
-		return;
-	}
-	if (msgText.empty()) {
-		client.send("412 " + client.getNickname() + " :No text to send\r\n");
-		return;
-	}
 
 	// Handle channel or private messages
 	if (target[0] == '#') {
@@ -53,18 +35,48 @@ void PrivmsgCommandHandler::handle(Client& client, const Message& message) {
 
 
 std::string PrivmsgCommandHandler::formatMessage(const Client& sender, const std::string& target, const std::string& message) {
-	return ":" + sender.getNickname() + "!" + sender.getUsername() + "@" +
-		   sender.getHostname() + " PRIVMSG " + target + " :" + message + "\r\n";
+    // Ensure proper IRC message format with \r\n
+    return ":" + sender.getNickname() +
+           "!" + sender.getUsername() +
+           "@" + sender.getHostname() +
+           " PRIVMSG " + target +
+           " :" + message + "\r\n";
 }
 
 void PrivmsgCommandHandler::sendPrivateMessage(Client& sender, const std::string& targetNick, const std::string& message) {
-	Client* target = server.findClientByNickname(targetNick);
-	if (!target) {
-		sender.send("401 " + sender.getNickname() + " " + targetNick + " :No such nick/channel\r\n");
-		return;
-	}
+    // Remove trailing whitespace from message using C++98 methods
+    std::string trimmedMessage = message;
+    size_t endpos = trimmedMessage.find_last_not_of(" \r\n");
+    if (endpos != std::string::npos) {
+        trimmedMessage = trimmedMessage.substr(0, endpos + 1);
+    } else {
+        trimmedMessage.clear();
+    }
 
-	target->send(formatMessage(sender, targetNick, message));
+    // Rest of the validation
+    if (trimmedMessage.empty()) {
+        sender.send("412 " + sender.getNickname() + " :No text to send\r\n");
+        return;
+    }
+
+    std::cout << "[DEBUG] PRIVMSG - Attempting to send from " << sender.getNickname()
+              << " to " << targetNick << std::endl;
+    std::cout << "[DEBUG] PRIVMSG - Message content: " << trimmedMessage << std::endl;
+
+    Client* target = server.findClientByNickname(targetNick);
+    if (!target) {
+        sender.send("401 " + sender.getNickname() + " " + targetNick + " :No such nick/channel\r\n");
+        return;
+    }
+
+    if (!target->isRegistered()) {
+        sender.send("401 " + sender.getNickname() + " " + targetNick + " :User not registered\r\n");
+        return;
+    }
+
+    std::string formattedMsg = formatMessage(sender, targetNick, trimmedMessage);
+    std::cout << "[DEBUG] PRIVMSG - Sending formatted message: " << formattedMsg;
+    target->send(formattedMsg);
 }
 
 void PrivmsgCommandHandler::sendChannelMessage(Client& sender, const std::string& channelName, const std::string& message) {

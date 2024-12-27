@@ -24,8 +24,13 @@ void UserCommandHandler::handle(Client& client, const Message& message) {
 		return;
 	}
 
-	client.setUsername(message.getParams()[0]);
-	client.setRealname(message.getParams()[3]);
+    // Store both username and realname
+    client.setUsername(message.getParams()[0]);
+    // The realname is the last parameter (after the colon)
+    if (message.getParams().size() >= 4) {
+        client.setRealname(message.getParams()[3]);
+    }
+
 	std::cout << "Client set username to: " << client.getUsername() << std::endl;
 
 if (client.isAuthenticated() && !client.getNickname().empty()) {

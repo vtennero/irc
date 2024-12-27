@@ -37,13 +37,22 @@ std::string Client::getHostname() const
 	return hostname;
 }
 
-void Client::send(const std::string& message)
-{
-	std::cout << "[DEBUG] function send called with message length: " << message.length() << std::endl;
-	if (::send(fd, message.c_str(), message.length(), 0) == -1)
-	{
-		std::cerr << "Error sending message: " << strerror(errno) << std::endl;
-	}
+void Client::send(const std::string& message) {
+    std::string completeMessage = message + "\r\n";
+    std::cout << "[DEBUG] Sending to client fd " << fd << ": " << message;
+    ssize_t total = 0;
+    ssize_t remaining = completeMessage.length();
+
+    while (total < (ssize_t)completeMessage.length()) {
+        ssize_t sent = ::send(fd, completeMessage.c_str() + total, remaining, 0);
+        if (sent == -1) {
+            std::cerr << "Error sending message: " << strerror(errno) << std::endl;
+            return;
+        }
+        total += sent;
+        remaining -= sent;
+    }
+    std::cout << "[DEBUG] Successfully sent " << total << " bytes" << std::endl;
 }
 
 int Client::getFd() const

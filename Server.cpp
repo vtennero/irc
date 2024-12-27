@@ -5,6 +5,10 @@
 #include "UserCommandHandler.hpp"
 #include "QuitCommandHandler.hpp"
 #include "PrivmsgCommandHandler.hpp"
+#include "ModeCommandHandler.hpp"
+#include "WhoisCommandHandler.hpp"
+#include "PingCommandHandler.hpp"
+#include "PongCommandHandler.hpp"
 
 #include <iostream>
 #include <cstring>
@@ -35,11 +39,22 @@ void Server::broadcastToChannel(const std::string& channelName, const std::strin
 }
 
 Client* Server::findClientByNickname(const std::string& nickname) {
+    std::cout << "[DEBUG] Server::findClientByNickname - Looking for: " << nickname << std::endl;
+    std::cout << "[DEBUG] Current clients in server:" << std::endl;
+
     for (map<int, Client>::iterator it = clients.begin(); it != clients.end(); ++it) {
+        std::cout << "  FD: " << it->first
+                  << " Nick: " << it->second.getNickname()
+                  << " Registered: " << (it->second.isRegistered() ? "Yes" : "No")
+                  << std::endl;
+
         if (it->second.getNickname() == nickname) {
+            std::cout << "[DEBUG] Found matching client!" << std::endl;
             return &(it->second);
         }
     }
+
+    std::cout << "[DEBUG] No matching client found" << std::endl;
     return NULL;
 }
 
@@ -111,6 +126,10 @@ Server::Server(int port, const string& password) : serverSocket(-1), serverPassw
 	commandHandlers["USER"] = new UserCommandHandler(*this);
 	commandHandlers["QUIT"] = new QuitCommandHandler(*this);
 	commandHandlers["PRIVMSG"] = new PrivmsgCommandHandler(*this);
+    commandHandlers["MODE"] = new ModeCommandHandler(*this);
+    commandHandlers["WHOIS"] = new WhoisCommandHandler(*this);
+	commandHandlers["PING"] = new PingCommandHandler(*this);
+	commandHandlers["PONG"] = new PongCommandHandler(*this);
 
 	cout << "Server listening on port " << port << endl;
 }
@@ -206,8 +225,8 @@ void Server::handleClientData(size_t index)
 	int clientFd = clientFds[index].fd;
 	int bytesRead = recv(clientFds[index].fd, buffer, sizeof(buffer), 0);
 
-	cout << "DEBUG - Received bytes: " << bytesRead << endl;
-	cout << "DEBUG - Raw data: [";
+	cout << "[DEBUG] Received bytes: " << bytesRead << endl;
+	cout << "[DEBUG] Raw data: [";
 	for (int i = 0; i < bytesRead; i++)
 	{
 		if (buffer[i] == '\r') cout << "\\r";
