@@ -35,6 +35,7 @@ private:
 	void handleNewConnection();
 	void handleClientData(size_t index);
 	bool authenticateClient(const string& password, int clientFd);
+    void checkClientPings();  // Add ping check method declaration
 
 public:
 	Server(int port, const string& password);

@@ -4,14 +4,15 @@
 #include <iostream>
 
 void PingCommandHandler::handle(Client& client, const Message& message) {
-    std::cout << "[DEBUG] PING command received" << std::endl;
+    std::cout << "[DEBUG] PING command received with token: " <<
+        (message.getParams().empty() ? "none" : message.getParams()[0]) << std::endl;
 
-    // IRC PING-PONG format:
-    // Client sends: PING <token>
-    // Server responds: PONG <server> <token>
+    std::string token = message.getParams().empty() ?
+                       server.getServerName() :
+                       message.getParams()[0];
 
-    std::string token = message.getParams().empty() ? server.getServerName() : message.getParams()[0];
-    std::string response = "PONG " + server.getServerName() + " :" + token + "\r\n";
+    // Simple PONG response format: "PONG :token"
+    std::string response = "PONG :" + token + "\r\n";
 
     std::cout << "[DEBUG] Sending PONG response: " << response;
     client.send(response);

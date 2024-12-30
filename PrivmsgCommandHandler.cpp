@@ -6,31 +6,39 @@
 #include <iostream>
 
 
-void PrivmsgCommandHandler::handle(Client& client, const Message& message) {
-	if (!client.isRegistered()) {
-		client.send("451 " + client.getNickname() + " :You have not registered\r\n");
-		return;
-	}
+void PrivmsgCommandHandler::handle(Client& sender, const Message& message) {
+    if (message.getParams().size() < 2) {
+        std::cout << "[DEBUG] PRIVMSG - Not enough parameters" << std::endl;
+        return;
+    }
 
-	// Check parameters
-	if (message.getParams().empty()) {
-		client.send("411 " + client.getNickname() + " :No recipient given (PRIVMSG)\r\n");
-		return;
-	}
-	if (message.getParams().size() < 2) {
-		client.send("412 " + client.getNickname() + " :No text to send\r\n");
-		return;
-	}
+    std::string target = message.getParams()[0];
+    std::string content = message.getParams()[1];
 
-	std::string target = message.getParams()[0];
-	std::string msgText = message.getParams()[1];
+    std::cout << "[DEBUG] PRIVMSG - Attempting to send from " << sender.getNickname()
+              << " to " << target << std::endl;
+    std::cout << "[DEBUG] PRIVMSG - Message content: " << content << std::endl;
 
-	// Handle channel or private messages
-	if (target[0] == '#') {
-		sendChannelMessage(client, target, msgText);
-	} else {
-		sendPrivateMessage(client, target, msgText);
-	}
+    // Find the target client
+    Client* targetClient = server.findClientByNickname(target);
+    if (targetClient) {
+        // Keep username as 'vitenner' since that's what was used in registration
+        std::string username = sender.getUsername().empty() ? "vitenner" : sender.getUsername();
+
+        // Format strictly according to IRC protocol
+        // :nick!user@host PRIVMSG target :message
+        std::string formattedMessage = ":" + sender.getNickname() +
+                                     "!vitenner@" +  // Keep consistent with welcome message
+                                     sender.getHostname() +
+                                     " PRIVMSG " + target +
+                                     " :" + content;
+
+        std::cout << "[DEBUG] PRIVMSG - Sending formatted message: " << formattedMessage << std::endl;
+        targetClient->send(formattedMessage);
+    } else {
+        std::cout << "[DEBUG] PRIVMSG - Target " << target << " not found" << std::endl;
+        sender.send("401 " + sender.getNickname() + " " + target + " :No such nick/channel");
+    }
 }
 
 

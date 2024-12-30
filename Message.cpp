@@ -2,16 +2,27 @@
 #include <sstream>
 #include <iostream>
 
-Message::Message(const std::string& rawMessage) {
-	std::cout << "[DEBUG] function Message constructor called with raw message: " << rawMessage << std::endl;
-	std::string msg = rawMessage;
+
+void Message::parseToken()
+{
+	if (command == "PING" || command == "PONG") {
+		token = params.empty() ? "" : params[0];
+	}
+}
+
+Message::Message(const std::string& rawMessage)
+    : rawMessage(rawMessage)  // Store the original message
+{
+    std::cout << "[DEBUG] function Message constructor called with raw message: " << rawMessage << std::endl;
+    std::string msg = rawMessage;
 	size_t pos = 0;
 
 	// Handle prefix if exists (starts with :)
 	if (!msg.empty() && msg[0] == ':') {
 		pos = msg.find(' ');
 		if (pos != std::string::npos) {
-			prefix = msg.substr(1, pos - 1);
+			prefix = msg.substr(1, pos - 1);  // Store the prefix without the :
+			std::cout << "[DEBUG] Extracted prefix: " << prefix << std::endl;
 			msg = msg.substr(pos + 1);
 		}
 	}
@@ -20,6 +31,7 @@ Message::Message(const std::string& rawMessage) {
 	pos = msg.find(' ');
 	if (pos != std::string::npos) {
 		command = msg.substr(0, pos);
+		std::cout << "[DEBUG] Extracted command: " << command << std::endl;
 		msg = msg.substr(pos + 1);
 	} else {
 		command = msg;

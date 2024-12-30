@@ -3,6 +3,12 @@
 
 #include <string>
 #include <vector>
+#include <iostream>
+#include <ctime>
+
+using std::cout;
+using std::endl;
+using std::cerr;
 
 class Client {
 private:
@@ -14,6 +20,11 @@ private:
 	bool authenticated;
 	bool registered;
 	std::string messageBuffer;
+    std::string sendBuffer;
+    time_t lastPingSent;     // When we last sent a PING
+    time_t lastPongReceived; // When we last got a PONG
+    std::string lastPingToken; // Track the token we sent
+    bool awaitingPong;       // Are we waiting for a PONG?
 
 public:
 	Client(int fd);
@@ -38,6 +49,14 @@ public:
 	// buffer mgt
 	void appendToBuffer(const std::string& data);
 	std::vector<std::string> getCompleteMessages();
+	bool hasDataToSend() const { return !sendBuffer.empty(); }
+    void tryFlushSendBuffer();
+
+    void updateLastPongReceived() { lastPongReceived = time(NULL); }
+    bool isPingTimedOut() const;
+    void sendPing();
+    bool verifyPongToken(const std::string& token);
+    bool needsPing() const;
 };
 
 #endif
