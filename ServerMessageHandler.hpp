@@ -6,6 +6,12 @@
 #include "Client.hpp"
 #include "Message.hpp"
 
+using std::string;
+using std::vector;
+using std::cout;
+using std::endl;
+using std::cerr;
+
 class ServerMessageHandler : public CommandHandler {
 public:
     ServerMessageHandler(Server& server) : CommandHandler(server) {}

@@ -1,7 +1,7 @@
 NAME			= 	ircserv
 
-SOURCE			= 	main.cpp Server.cpp Client.cpp NickCommandHandler.cpp QuitCommandHandler.cpp UserCommandHandler.cpp Message.cpp Channel.cpp PrivmsgCommandHandler.cpp WhoisCommandHandler.cpp ModeCommandHandler.cpp PingCommandHandler.cpp PongCommandHandler.cpp ServerMessageHandler.cpp
-# JoinCommandHandler.cpp PartCommandHandler.cpp ListCommandHandler.cpp NamesCommandHandler.cpp KickCommandHandler.cpp TopicCommandHandler.cpp InviteCommandHandler.cpp
+SOURCE			= 	main.cpp Server.cpp Client.cpp NickCommandHandler.cpp QuitCommandHandler.cpp UserCommandHandler.cpp Message.cpp Channel.cpp PrivmsgCommandHandler.cpp WhoisCommandHandler.cpp ModeCommandHandler.cpp PingCommandHandler.cpp PongCommandHandler.cpp ServerMessageHandler.cpp  JoinCommandHandler.cpp PartCommandHandler.cpp ListCommandHandler.cpp NamesCommandHandler.cpp
+# KickCommandHandler.cpp TopicCommandHandler.cpp InviteCommandHandler.cpp
 
 OBJECT			=	$(SOURCE:.cpp=.o)
 

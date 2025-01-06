@@ -12,39 +12,46 @@
 
 Client::Client() : fd(-1), nickname("*"), authenticated(false), registered(false)
 {
-	std::cout << "[DEBUG] function Client default constructor called" << std::endl;
+	cout << "[DEBUG] function Client default constructor called" << endl;
 }
 
 Client::Client(int fd) : fd(fd), nickname("*"), authenticated(false), registered(false)
 {
-	std::cout << "[DEBUG] function Client constructor (fd) called with fd: " << fd << std::endl;
+	cout << "[DEBUG] function Client constructor (fd) called with fd: " << fd << endl;
 }
 
-Client::Client(int fd, const std::string& hostname)
-	: fd(fd),
-	  hostname(hostname),
-	  nickname("*"),
-	  username(""),
-	  authenticated(false),
-	  registered(false)
+Client::Client(int fd, const string& hostname)
+    : fd(fd),
+      hostname(hostname),
+      nickname("*"),
+      username(""),
+      authenticated(false),
+      registered(false),
+      messageBuffer(""),
+      sendBuffer(""),
+      lastPingSent(time(NULL)),
+      lastPongReceived(time(NULL)),
+      lastPingToken(""),
+      awaitingPong(false)
 {
-	std::cout << "[DEBUG] function Client constructor (fd, hostname) called with fd: " << fd << ", hostname: " << hostname << std::endl;
+    cout << "[DEBUG] function Client constructor (fd, hostname) called with fd: " << fd
+         << ", hostname: " << hostname << endl;
 }
 
-void Client::setHostname(const std::string& hostname)
+void Client::setHostname(const string& hostname)
 {
-	std::cout << "[DEBUG] function setHostname called with hostname: " << hostname << std::endl;
+	cout << "[DEBUG] function setHostname called with hostname: " << hostname << endl;
 	this->hostname = hostname;
 }
 
-std::string Client::getHostname() const
+string Client::getHostname() const
 {
-	std::cout << "[DEBUG] function getHostname called" << std::endl;
+	cout << "[DEBUG] function getHostname called" << endl;
 	return hostname;
 }
 
 void hexDump(const char* data, size_t size) {
-    std::cout << "[DEBUG] Hex dump of message (" << size << " bytes):" << std::endl;
+    cout << "[DEBUG] Hex dump of message (" << size << " bytes):" << endl;
     for (size_t i = 0; i < size; i++) {
         printf("%02x ", (unsigned char)data[i]);
         if ((i + 1) % 16 == 0) printf("\n");
@@ -77,9 +84,9 @@ void Client::tryFlushSendBuffer() {
     }
 }
 
-void Client::send(const std::string& message) {
+void Client::send(const string& message) {
     // Check if message already ends with \r\n
-    std::string completeMessage = message;
+    string completeMessage = message;
     if (completeMessage.length() < 2 ||
         completeMessage.substr(completeMessage.length() - 2) != "\r\n") {
         completeMessage += "\r\n";
@@ -107,20 +114,31 @@ void Client::sendPing() {
     lastPingSent = time(NULL);
     awaitingPong = true;
 
-    std::string pingMsg = "PING :" + lastPingToken + "\r\n";
+    string pingMsg = "PING :" + lastPingToken + "\r\n";
     send(pingMsg);
 }
 
+// bool Client::isPingTimedOut() const {
+//     if (!awaitingPong) return false;
+//     return (time(NULL) - lastPingSent) > 60; // 60 second timeout
+// }
+
 bool Client::isPingTimedOut() const {
-    if (!awaitingPong) return false;
-    return (time(NULL) - lastPingSent) > 60; // 60 second timeout
+    if (!awaitingPong) {
+        return false;
+    }
+    time_t currentTime = time(NULL);
+    cout << "[DEBUG] Checking ping timeout - Last ping: " << lastPingSent
+         << ", Current: " << currentTime
+         << ", Diff: " << (currentTime - lastPingSent) << endl;
+    return (currentTime - lastPingSent) > 60; // 60 second timeout
 }
 
 bool Client::needsPing() const {
     return !awaitingPong && (time(NULL) - lastPongReceived) > 120; // Send ping every 120 seconds
 }
 
-bool Client::verifyPongToken(const std::string& token) {
+bool Client::verifyPongToken(const string& token) {
     if (token == lastPingToken) {
         awaitingPong = false;
         lastPongReceived = time(NULL);
@@ -131,43 +149,43 @@ bool Client::verifyPongToken(const std::string& token) {
 
 int Client::getFd() const
 {
-	std::cout << "[DEBUG] function getFd called" << std::endl;
+	cout << "[DEBUG] function getFd called" << endl;
 	return fd;
 }
 
-void Client::appendToBuffer(const std::string& data)
+void Client::appendToBuffer(const string& data)
 {
-    std::cout << "[DEBUG] function appendToBuffer called with data length: " << data.length() << std::endl;
-    std::cout << "[DEBUG] Raw data being appended (hex): ";
+    cout << "[DEBUG] function appendToBuffer called with data length: " << data.length() << endl;
+    cout << "[DEBUG] Raw data being appended (hex): ";
     for (size_t i = 0; i < data.length(); i++) {
         printf("%02x ", (unsigned char)data[i]);
     }
-    std::cout << std::endl;
+    cout << endl;
     messageBuffer += data;
-    std::cout << "DEBUG - Current buffer: [" << messageBuffer << "]" << std::endl;
+    cout << "DEBUG - Current buffer: [" << messageBuffer << "]" << endl;
 }
 
-std::vector<std::string> Client::getCompleteMessages()
+vector<string> Client::getCompleteMessages()
 {
-    std::cout << "[DEBUG] function getCompleteMessages called" << std::endl;
-    std::vector<std::string> completeMessages;
+    cout << "[DEBUG] function getCompleteMessages called" << endl;
+    vector<string> completeMessages;
     size_t pos;
 
     // Trim any leading whitespace/newlines
     while (!messageBuffer.empty() && (messageBuffer[0] == '\n' || messageBuffer[0] == '\r' || messageBuffer[0] == ' '))
     {
-        std::cout << "[DEBUG] Trimming leading character: " << (int)messageBuffer[0] << std::endl;
+        cout << "[DEBUG] Trimming leading character: " << (int)messageBuffer[0] << endl;
         messageBuffer.erase(0, 1);
     }
 
-    while ((pos = messageBuffer.find("\r\n")) != std::string::npos)
+    while ((pos = messageBuffer.find("\r\n")) != string::npos)
     {
-        std::string completeMessage = messageBuffer.substr(0, pos);
-        std::cout << "[DEBUG] Found message ending at pos " << pos << ": " << completeMessage << std::endl;
+        string completeMessage = messageBuffer.substr(0, pos);
+        cout << "[DEBUG] Found message ending at pos " << pos << ": " << completeMessage << endl;
 
         // Special debug for server messages
         if (!completeMessage.empty() && completeMessage[0] == ':') {
-            std::cout << "[DEBUG] Found server message: " << completeMessage << std::endl;
+            cout << "[DEBUG] Found server message: " << completeMessage << endl;
         }
 
         completeMessages.push_back(completeMessage);
@@ -176,7 +194,7 @@ std::vector<std::string> Client::getCompleteMessages()
         // Trim again after extracting a message
         while (!messageBuffer.empty() && (messageBuffer[0] == '\n' || messageBuffer[0] == '\r' || messageBuffer[0] == ' '))
         {
-            std::cout << "[DEBUG] Trimming trailing character: " << (int)messageBuffer[0] << std::endl;
+            cout << "[DEBUG] Trimming trailing character: " << (int)messageBuffer[0] << endl;
             messageBuffer.erase(0, 1);
         }
     }

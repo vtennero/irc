@@ -2,8 +2,8 @@
 #include <iostream>
 
 void ServerMessageHandler::handle(Client& client, const Message& message) {
-    std::cout << "[DEBUG] Processing server message in handler" << std::endl;
-    std::cout << "[DEBUG] Raw message: " << message.getRawMessage() << std::endl;
+    cout << "[DEBUG] Processing server message in handler" << endl;
+    cout << "[DEBUG] Raw message: " << message.getRawMessage() << endl;
 
     if (message.getCommand() == "PRIVMSG") {
         // For PRIVMSG, just forward the original message as-is

@@ -3,6 +3,12 @@
 
 #include "CommandHandler.hpp"
 
+using std::string;
+using std::vector;
+using std::cout;
+using std::endl;
+using std::cerr;
+
 class PongCommandHandler : public CommandHandler {
 public:
     PongCommandHandler(Server& server) : CommandHandler(server) {}

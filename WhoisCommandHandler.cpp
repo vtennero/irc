@@ -9,14 +9,14 @@ void WhoisCommandHandler::handle(Client& client, const Message& message) {
 		return;
 	}
 
-	std::string targetNick = message.getParams()[0];
-	std::cout << "[DEBUG] WHOIS - Looking for target: " << targetNick << std::endl;
+	string targetNick = message.getParams()[0];
+	cout << "[DEBUG] WHOIS - Looking for target: " << targetNick << endl;
 
 	Client* target = server.findClientByNickname(targetNick);
-	std::cout << "[DEBUG] WHOIS - Target found: " << (target ? "yes" : "no") << std::endl;
+	cout << "[DEBUG] WHOIS - Target found: " << (target ? "yes" : "no") << endl;
 
 	if (!target) {
-		std::cout << "[DEBUG] WHOIS - Target not found, sending error" << std::endl;
+		cout << "[DEBUG] WHOIS - Target not found, sending error" << endl;
 		client.send("401 " + client.getNickname() + " " + targetNick + " :No such nick/channel\r\n");
 		return;
 	}

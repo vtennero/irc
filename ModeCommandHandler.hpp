@@ -3,6 +3,12 @@
 
 #include "CommandHandler.hpp"
 
+using std::string;
+using std::vector;
+using std::cout;
+using std::endl;
+using std::cerr;
+
 class ModeCommandHandler : public CommandHandler {
 public:
     ModeCommandHandler(Server& server) : CommandHandler(server) {}

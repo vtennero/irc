@@ -4,6 +4,13 @@
 #include "CommandHandler.hpp"
 #include "Server.hpp"
 
+using std::string;
+using std::vector;
+using std::cout;
+using std::endl;
+using std::cerr;
+using std::ostringstream;
+
 class QuitCommandHandler : public CommandHandler {
 public:
 	QuitCommandHandler(Server& server) : CommandHandler(server) {}

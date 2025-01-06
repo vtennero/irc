@@ -14,9 +14,9 @@
 using std::string;
 using std::vector;
 using std::map;
-using std::cerr;
 using std::cout;
 using std::endl;
+using std::cerr;
 
 class Server
 {
@@ -51,12 +51,21 @@ public:
 	void broadcastMessage(const string& message, const Client* exclude = NULL);
 	bool isNicknameInUse(const string& nickname) const;
 
-	void sendToClient(const std::string& nickname, const std::string& message);
-	void broadcastToChannel(const std::string& channelName, const std::string& message, const Client* exclude = NULL);
+	void sendToClient(const string& nickname, const string& message);
+	void broadcastToChannel(const string& channelName, const string& message, const Client* exclude = NULL);
 
-	Client* findClientByNickname(const std::string& nickname);
-    bool isChannelExist(const std::string& channelName) const;
-    Channel* getChannel(const std::string& channelName);
+	Client* findClientByNickname(const string& nickname);
+    bool isChannelExist(const string& channelName) const;
+    Channel* getChannel(const string& channelName);
+	Channel* createChannel(const string& channelName); // Remove inline implementation
+
+    vector<Channel*> getAllChannels() {
+        vector<Channel*> result;
+        for (map<string, Channel>::iterator it = channels.begin(); it != channels.end(); ++it) {
+            result.push_back(&(it->second));
+        }
+        return result;
+    }
 };
 
 #endif

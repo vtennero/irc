@@ -6,10 +6,10 @@
 #include <sstream>
 
 void UserCommandHandler::handle(Client& client, const Message& message) {
-	std::cout << "[DEBUG] function handle called for client fd: " << client.getFd() << std::endl;
+	cout << "[DEBUG] function handle called for client fd: " << client.getFd() << endl;
 
 	if (client.isRegistered()) {
-		std::cout << "[DEBUG] Client already registered, preventing reregistration" << std::endl;
+		cout << "[DEBUG] Client already registered, preventing reregistration" << endl;
 		client.send("462 " + client.getNickname() + " :You may not reregister\r\n");
 		return;
 	}
@@ -31,26 +31,26 @@ void UserCommandHandler::handle(Client& client, const Message& message) {
         client.setRealname(message.getParams()[3]);
     }
 
-	std::cout << "Client set username to: " << client.getUsername() << std::endl;
+	cout << "Client set username to: " << client.getUsername() << endl;
 
 if (client.isAuthenticated() && !client.getNickname().empty()) {
-    std::cout << "Client fully registered, sending welcome" << std::endl;
+    cout << "Client fully registered, sending welcome" << endl;
     client.setRegistered(true);
     sendWelcomeMessages(client);
 } else {
-    std::cout << "Registration incomplete - Auth: " << client.isAuthenticated()
-              << ", Nick: " << !client.getNickname().empty() << std::endl;
+    cout << "Registration incomplete - Auth: " << client.isAuthenticated()
+              << ", Nick: " << !client.getNickname().empty() << endl;
 }
 }
 
 void UserCommandHandler::sendWelcomeMessages(Client& client)
 {
-	std::cout << "[DEBUG] Sending welcome messages to client" << std::endl;
+	cout << "[DEBUG] Sending welcome messages to client" << endl;
 
 
-	std::string nickname = client.getNickname();
-	std::string username = client.getUsername();
-	std::string hostname = client.getHostname();
+	string nickname = client.getNickname();
+	string username = client.getUsername();
+	string hostname = client.getHostname();
 
 	// 001 RPL_WELCOME
 	client.send("001 " + nickname + " :Welcome to the Internet Relay Network "

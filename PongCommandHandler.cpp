@@ -5,15 +5,15 @@
 
 void PongCommandHandler::handle(Client& client, const Message& message) {
     if (message.getParams().empty()) {
-        std::cout << "[DEBUG] PONG received without token" << std::endl;
+        cout << "[DEBUG] PONG received without token" << endl;
         return;
     }
 
-    std::string token = message.getParams()[0];
-    std::cout << "[DEBUG] PONG received with token: " << token << std::endl;
+    string token = message.getParams()[0];
+    cout << "[DEBUG] PONG received with token: " << token << endl;
 
     if (!client.verifyPongToken(token)) {
-        std::cout << "[DEBUG] PONG received with invalid token" << std::endl;
+        cout << "[DEBUG] PONG received with invalid token" << endl;
         // Could disconnect client here if needed
         return;
     }

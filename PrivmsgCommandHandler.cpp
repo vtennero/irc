@@ -8,41 +8,41 @@
 
 void PrivmsgCommandHandler::handle(Client& sender, const Message& message) {
     if (message.getParams().size() < 2) {
-        std::cout << "[DEBUG] PRIVMSG - Not enough parameters" << std::endl;
+        cout << "[DEBUG] PRIVMSG - Not enough parameters" << endl;
         return;
     }
 
-    std::string target = message.getParams()[0];
-    std::string content = message.getParams()[1];
+    string target = message.getParams()[0];
+    string content = message.getParams()[1];
 
-    std::cout << "[DEBUG] PRIVMSG - Attempting to send from " << sender.getNickname()
-              << " to " << target << std::endl;
-    std::cout << "[DEBUG] PRIVMSG - Message content: " << content << std::endl;
+    cout << "[DEBUG] PRIVMSG - Attempting to send from " << sender.getNickname()
+              << " to " << target << endl;
+    cout << "[DEBUG] PRIVMSG - Message content: " << content << endl;
 
     // Find the target client
     Client* targetClient = server.findClientByNickname(target);
     if (targetClient) {
         // Keep username as 'vitenner' since that's what was used in registration
-        std::string username = sender.getUsername().empty() ? "vitenner" : sender.getUsername();
+        string username = sender.getUsername().empty() ? "vitenner" : sender.getUsername();
 
         // Format strictly according to IRC protocol
         // :nick!user@host PRIVMSG target :message
-        std::string formattedMessage = ":" + sender.getNickname() +
+        string formattedMessage = ":" + sender.getNickname() +
                                      "!vitenner@" +  // Keep consistent with welcome message
                                      sender.getHostname() +
                                      " PRIVMSG " + target +
                                      " :" + content;
 
-        std::cout << "[DEBUG] PRIVMSG - Sending formatted message: " << formattedMessage << std::endl;
+        cout << "[DEBUG] PRIVMSG - Sending formatted message: " << formattedMessage << endl;
         targetClient->send(formattedMessage);
     } else {
-        std::cout << "[DEBUG] PRIVMSG - Target " << target << " not found" << std::endl;
+        cout << "[DEBUG] PRIVMSG - Target " << target << " not found" << endl;
         sender.send("401 " + sender.getNickname() + " " + target + " :No such nick/channel");
     }
 }
 
 
-std::string PrivmsgCommandHandler::formatMessage(const Client& sender, const std::string& target, const std::string& message) {
+string PrivmsgCommandHandler::formatMessage(const Client& sender, const string& target, const string& message) {
     // Ensure proper IRC message format with \r\n
     return ":" + sender.getNickname() +
            "!" + sender.getUsername() +
@@ -51,11 +51,11 @@ std::string PrivmsgCommandHandler::formatMessage(const Client& sender, const std
            " :" + message + "\r\n";
 }
 
-void PrivmsgCommandHandler::sendPrivateMessage(Client& sender, const std::string& targetNick, const std::string& message) {
+void PrivmsgCommandHandler::sendPrivateMessage(Client& sender, const string& targetNick, const string& message) {
     // Remove trailing whitespace from message using C++98 methods
-    std::string trimmedMessage = message;
+    string trimmedMessage = message;
     size_t endpos = trimmedMessage.find_last_not_of(" \r\n");
-    if (endpos != std::string::npos) {
+    if (endpos != string::npos) {
         trimmedMessage = trimmedMessage.substr(0, endpos + 1);
     } else {
         trimmedMessage.clear();
@@ -67,9 +67,9 @@ void PrivmsgCommandHandler::sendPrivateMessage(Client& sender, const std::string
         return;
     }
 
-    std::cout << "[DEBUG] PRIVMSG - Attempting to send from " << sender.getNickname()
-              << " to " << targetNick << std::endl;
-    std::cout << "[DEBUG] PRIVMSG - Message content: " << trimmedMessage << std::endl;
+    cout << "[DEBUG] PRIVMSG - Attempting to send from " << sender.getNickname()
+              << " to " << targetNick << endl;
+    cout << "[DEBUG] PRIVMSG - Message content: " << trimmedMessage << endl;
 
     Client* target = server.findClientByNickname(targetNick);
     if (!target) {
@@ -82,12 +82,12 @@ void PrivmsgCommandHandler::sendPrivateMessage(Client& sender, const std::string
         return;
     }
 
-    std::string formattedMsg = formatMessage(sender, targetNick, trimmedMessage);
-    std::cout << "[DEBUG] PRIVMSG - Sending formatted message: " << formattedMsg;
+    string formattedMsg = formatMessage(sender, targetNick, trimmedMessage);
+    cout << "[DEBUG] PRIVMSG - Sending formatted message: " << formattedMsg;
     target->send(formattedMsg);
 }
 
-void PrivmsgCommandHandler::sendChannelMessage(Client& sender, const std::string& channelName, const std::string& message) {
+void PrivmsgCommandHandler::sendChannelMessage(Client& sender, const string& channelName, const string& message) {
 	Channel* channel = server.getChannel(channelName);
 	if (!channel) {
 		sender.send("403 " + sender.getNickname() + " " + channelName + " :No such channel\r\n");

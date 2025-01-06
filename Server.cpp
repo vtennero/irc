@@ -9,7 +9,10 @@
 #include "WhoisCommandHandler.hpp"
 #include "PingCommandHandler.hpp"
 #include "PongCommandHandler.hpp"
-#include "ServerMessageHandler.hpp"
+#include "JoinCommandHandler.hpp"
+#include "PartCommandHandler.hpp"
+#include "ListCommandHandler.hpp"
+#include "NamesCommandHandler.hpp"
 
 #include <iostream>
 #include <cstring>
@@ -25,7 +28,7 @@
 #include <stdio.h>
 
 // privmsg
-void Server::sendToClient(const std::string& nickname, const std::string& message) {
+void Server::sendToClient(const string& nickname, const string& message) {
 	for (map<int, Client>::iterator it = clients.begin(); it != clients.end(); ++it) {
 		if (it->second.getNickname() == nickname) {
 			it->second.send(message);
@@ -34,43 +37,54 @@ void Server::sendToClient(const std::string& nickname, const std::string& messag
 	}
 }
 
-void Server::broadcastToChannel(const std::string& channelName, const std::string& message, const Client* exclude) {
+void Server::broadcastToChannel(const string& channelName, const string& message, const Client* exclude) {
 	map<string, Channel>::iterator it = channels.find(channelName);
 	if (it != channels.end()) {
 		it->second.broadcastMessage(message, exclude);
 	}
 }
 
-Client* Server::findClientByNickname(const std::string& nickname) {
-	std::cout << "[DEBUG] Server::findClientByNickname - Looking for: " << nickname << std::endl;
-	std::cout << "[DEBUG] Current clients in server:" << std::endl;
+Client* Server::findClientByNickname(const string& nickname) {
+	cout << "[DEBUG] Server::findClientByNickname - Looking for: " << nickname << endl;
+	cout << "[DEBUG] Current clients in server:" << endl;
 
 	for (map<int, Client>::iterator it = clients.begin(); it != clients.end(); ++it) {
-		std::cout << "  FD: " << it->first
+		cout << "  FD: " << it->first
 				  << " Nick: " << it->second.getNickname()
 				  << " Registered: " << (it->second.isRegistered() ? "Yes" : "No")
-				  << std::endl;
+				  << endl;
 
 		if (it->second.getNickname() == nickname) {
-			std::cout << "[DEBUG] Found matching client!" << std::endl;
+			cout << "[DEBUG] Found matching client!" << endl;
 			return &(it->second);
 		}
 	}
 
-	std::cout << "[DEBUG] No matching client found" << std::endl;
+	cout << "[DEBUG] No matching client found" << endl;
 	return NULL;
 }
 
-bool Server::isChannelExist(const std::string& channelName) const {
+bool Server::isChannelExist(const string& channelName) const {
 	return channels.find(channelName) != channels.end();
 }
 
-Channel* Server::getChannel(const std::string& channelName) {
+Channel* Server::getChannel(const string& channelName) {
 	map<string, Channel>::iterator it = channels.find(channelName);
 	if (it != channels.end()) {
 		return &(it->second);
 	}
 	return NULL;
+}
+
+// Replace createChannel implementation
+Channel* Server::createChannel(const string& channelName)
+{
+    map<string, Channel>::iterator it = channels.find(channelName);
+    if (it != channels.end()) {
+        return &(it->second);
+    }
+    channels.insert(std::pair<string, Channel>(channelName, Channel(channelName)));
+    return &(channels.find(channelName)->second);
 }
 
 // Helper function for find_if
@@ -133,7 +147,10 @@ Server::Server(int port, const string& password) : serverSocket(-1), serverPassw
 	commandHandlers["WHOIS"] = new WhoisCommandHandler(*this);
 	commandHandlers["PING"] = new PingCommandHandler(*this);
 	commandHandlers["PONG"] = new PongCommandHandler(*this);
-	// commandHandlers["SERVER_MESSAGE"] = new ServerMessageHandler(*this);
+    commandHandlers["JOIN"] = new JoinCommandHandler(*this);
+    commandHandlers["PART"] = new PartCommandHandler(*this);
+    commandHandlers["LIST"] = new ListCommandHandler(*this);
+    commandHandlers["NAMES"] = new NamesCommandHandler(*this);
 
 	cout << "Server listening on port " << port << endl;
 }
@@ -157,41 +174,6 @@ Server::~Server()
 	}
 }
 
-// old working version
-// void Server::run()
-// {
-// 	cout << "[DEBUG] function run called" << endl;
-// 	pollfd serverPollFd;
-// 	serverPollFd.fd = serverSocket;
-// 	serverPollFd.events = POLLIN;
-// 	clientFds.push_back(serverPollFd);
-
-// 	while (true)
-// 	{
-// 		int pollResult = poll(&clientFds[0], clientFds.size(), -1);
-// 		if (pollResult == -1)
-// 		{
-// 			cerr << "Error in poll" << endl;
-// 			break;
-// 		}
-
-// 		for (size_t i = 0; i < clientFds.size(); ++i)
-// 		{
-// 			if (clientFds[i].revents & POLLIN)
-// 			{
-// 				if (clientFds[i].fd == serverSocket)
-// 				{
-// 					handleNewConnection();
-// 				} else
-// 				{
-// 					handleClientData(i);
-// 				}
-// 			}
-// 		}
-// 	}
-// }
-
-// In Server.cpp, modify the run() function:
 
 void Server::run()
 {
@@ -297,37 +279,6 @@ void Server::handleNewConnection()
          << " (fd: " << clientSocket << ")" << endl;
 }
 
-// void Server::handleNewConnection()
-// {
-// 	cout << "[DEBUG] function handleNewConnection called" << endl;
-// 	sockaddr_in clientAddr;
-// 	socklen_t clientAddrLen = sizeof(clientAddr);
-// 	int clientSocket = accept(serverSocket, (struct sockaddr*)&clientAddr, &clientAddrLen);
-// 	if (clientSocket == -1)
-// 	{
-// 		cerr << "Error accepting client connection: " << strerror(errno) << endl;
-// 		return;
-// 	}
-
-// 	setNonBlocking(clientSocket);
-
-// 	char hostBuffer[INET_ADDRSTRLEN];
-// 	if (inet_ntop(AF_INET, &(clientAddr.sin_addr), hostBuffer, INET_ADDRSTRLEN) == NULL)
-// 	{
-// 		cerr << "Error converting client address to string: " << strerror(errno) << endl;
-// 		close(clientSocket);
-// 		return;
-// 	}
-
-// 	clients[clientSocket] = Client(clientSocket, string(hostBuffer));
-
-// 	pollfd clientPollFd;
-// 	clientPollFd.fd = clientSocket;
-// 	clientPollFd.events = POLLIN;
-// 	clientFds.push_back(clientPollFd);
-
-// 	cout << "New client connected: " << hostBuffer << endl;
-// }
 
 void Server::handleClientData(size_t index)
 {
@@ -479,22 +430,28 @@ string Server::getCreationDate()
 	return "May 1, 2023";
 }
 
-void Server::removeClient(int fd)
-{
-	cout << "[DEBUG] function removeClient called" << endl;
-	// Remove the client from the clients map
-	map<int, Client>::iterator it = clients.find(fd);
-	if (it != clients.end())
-	{
-		clients.erase(it);
-	}
+void Server::removeClient(int fd) {
+    cout << "[DEBUG] function removeClient called for fd: " << fd << endl;
 
-	// Remove the client's file descriptor from the pollfd vector
-	vector<pollfd>::iterator pollIt = find_if(clientFds.begin(), clientFds.end(), FdComparer(fd));
-	if (pollIt != clientFds.end())
-	{
-		clientFds.erase(pollIt);
-	}
+    // First, remove from channels to avoid dangling pointers
+    for (map<string, Channel>::iterator chIt = channels.begin(); chIt != channels.end(); ++chIt) {
+        chIt->second.removeClient(&clients[fd]);
+    }
+
+    // Close the socket first
+    close(fd);
+
+    // Remove from clients map
+    map<int, Client>::iterator clientIt = clients.find(fd);
+    if (clientIt != clients.end()) {
+        clients.erase(clientIt);
+    }
+
+    // Remove from pollfd vector
+    vector<pollfd>::iterator pollIt = find_if(clientFds.begin(), clientFds.end(), FdComparer(fd));
+    if (pollIt != clientFds.end()) {
+        clientFds.erase(pollIt);
+    }
 }
 
 vector<Channel*> Server::getClientChannels(const Client& client)
@@ -538,16 +495,22 @@ bool Server::isNicknameInUse(const string& nickname) const
 }
 
 void Server::checkClientPings() {
-    map<int, Client>::iterator it = clients.begin();
-    while (it != clients.end()) {
-        map<int, Client>::iterator current = it++;  // Store current and advance iterator
-        if (current->second.isPingTimedOut()) {
-            std::cout << "[DEBUG] Client " << current->first << " ping timed out, disconnecting" << std::endl;
-            removeClient(current->first);
-            clients.erase(current);  // Erase using stored iterator
-        } else if (current->second.needsPing()) {
-            std::cout << "[DEBUG] Sending ping to client " << current->first << std::endl;
-            current->second.sendPing();
+    vector<int> timeoutFds; // Store FDs to remove
+
+    // First identify clients to remove
+    for (map<int, Client>::iterator it = clients.begin(); it != clients.end(); ++it) {
+        if (it->second.isPingTimedOut()) {
+            cout << "[DEBUG] Client " << it->first << " ping timed out, queueing for disconnect" << endl;
+            timeoutFds.push_back(it->first);
+        } else if (it->second.needsPing()) {
+            cout << "[DEBUG] Sending ping to client " << it->first << endl;
+            it->second.sendPing();
         }
+    }
+
+    // Then remove them separately to avoid iterator invalidation
+    for (vector<int>::iterator it = timeoutFds.begin(); it != timeoutFds.end(); ++it) {
+        cout << "[DEBUG] Removing timed out client fd: " << *it << endl;
+        removeClient(*it);
     }
 }

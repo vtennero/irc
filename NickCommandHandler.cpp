@@ -5,64 +5,64 @@
 #include <iostream>
 
 void NickCommandHandler::handle(Client& client, const Message& message) {
-	std::cout << "[DEBUG] function handle called for client fd: " << client.getFd() << std::endl;
+	cout << "[DEBUG] function handle called for client fd: " << client.getFd() << endl;
 
 	if (message.getParams().empty()) {
-		std::cout << "[DEBUG] No nickname provided" << std::endl;
+		cout << "[DEBUG] No nickname provided" << endl;
 		client.send("431 :No nickname given\r\n");
 		return;
 	}
 
-	std::string newNick = message.getParams()[0];
-	std::cout << "[DEBUG] Requested nickname: " << newNick << std::endl;
+	string newNick = message.getParams()[0];
+	cout << "[DEBUG] Requested nickname: " << newNick << endl;
 
 	if (!isValidNickname(newNick)) {
-		std::cout << "[DEBUG] Invalid nickname format" << std::endl;
+		cout << "[DEBUG] Invalid nickname format" << endl;
 		client.send("432 " + newNick + " :Erroneous nickname\r\n");
 		return;
 	}
 
 	if (server.isNicknameInUse(newNick)) {
-		std::cout << "[DEBUG] Nickname already in use" << std::endl;
+		cout << "[DEBUG] Nickname already in use" << endl;
 		client.send("433 " + newNick + " :Nickname is already in use\r\n");
 		return;
 	}
 
-	std::string oldNick = client.getNickname();
+	string oldNick = client.getNickname();
 	client.setNickname(newNick);
-	std::cout << "[DEBUG] Nickname changed from '" << oldNick << "' to '" << newNick << "'" << std::endl;
+	cout << "[DEBUG] Nickname changed from '" << oldNick << "' to '" << newNick << "'" << endl;
 
 	if (client.isAuthenticated() && !client.getUsername().empty()) {
-		std::cout << "[DEBUG] Client fully registered, sending welcome message" << std::endl;
+		cout << "[DEBUG] Client fully registered, sending welcome message" << endl;
 		client.setRegistered(true);
 		client.send("001 " + newNick + " :Welcome to the Internet Relay Network "
 				   + newNick + "!" + client.getUsername() + "@" + client.getHostname() + "\r\n");
 	}
 }
 
-bool NickCommandHandler::isValidNickname(const std::string& nick)
+bool NickCommandHandler::isValidNickname(const string& nick)
 {
-	std::cout << "[DEBUG] function isValidNickname called with nickname: " << nick << std::endl;
+	cout << "[DEBUG] function isValidNickname called with nickname: " << nick << endl;
 
 	if (nick.empty() || nick.length() > 9) {
-		std::cout << "[DEBUG] Nickname length invalid: " << nick.length() << " chars" << std::endl;
+		cout << "[DEBUG] Nickname length invalid: " << nick.length() << " chars" << endl;
 		return false;
 	}
 
 	if (!isalpha(nick[0]) && nick[0] != '[' && nick[0] != ']' &&
 		nick[0] != '\\' && nick[0] != '`' && nick[0] != '_' &&
 		nick[0] != '^' && nick[0] != '{' && nick[0] != '|') {
-		std::cout << "[DEBUG] Invalid first character: " << nick[0] << std::endl;
+		cout << "[DEBUG] Invalid first character: " << nick[0] << endl;
 		return false;
 	}
 
 	for (size_t i = 1; i < nick.length(); i++) {
 		if (!isalnum(nick[i]) && nick[i] != '-' && nick[i] != '_') {
-			std::cout << "[DEBUG] Invalid character at position " << i << ": " << nick[i] << std::endl;
+			cout << "[DEBUG] Invalid character at position " << i << ": " << nick[i] << endl;
 			return false;
 		}
 	}
 
-	std::cout << "[DEBUG] Nickname validation successful" << std::endl;
+	cout << "[DEBUG] Nickname validation successful" << endl;
 	return true;
 }
