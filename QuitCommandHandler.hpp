@@ -3,6 +3,7 @@
 
 #include "CommandHandler.hpp"
 #include "Server.hpp"
+# include "Debug.hpp"
 
 using std::string;
 using std::vector;

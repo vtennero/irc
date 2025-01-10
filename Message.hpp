@@ -4,6 +4,7 @@
 #include <string>
 #include <vector>
 #include <iostream>
+# include "Debug.hpp"
 
 using std::string;
 using std::vector;

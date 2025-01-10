@@ -2,6 +2,7 @@
 #define PONG_COMMAND_HANDLER_HPP
 
 #include "CommandHandler.hpp"
+# include "Debug.hpp"
 
 using std::string;
 using std::vector;

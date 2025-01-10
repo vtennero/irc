@@ -3,6 +3,7 @@
 
 #include "Client.hpp"
 #include "Message.hpp"
+# include "Debug.hpp"
 
 class Server;
 

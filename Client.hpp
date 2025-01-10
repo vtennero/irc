@@ -5,6 +5,7 @@
 #include <vector>
 #include <iostream>
 #include <ctime>
+# include "Debug.hpp"
 
 using std::string;
 using std::vector;
@@ -14,19 +15,19 @@ using std::cerr;
 
 class Client {
 private:
-    int fd;
-    string hostname;
-    string nickname;
-    string username;
-    string realname;
-    bool authenticated;
-    bool registered;
-    string messageBuffer;
-    string sendBuffer;
-    time_t lastPingSent;
-    time_t lastPongReceived;
-    string lastPingToken;
-    bool awaitingPong;
+	int fd;
+	string hostname;
+	string nickname;
+	string username;
+	string realname;
+	bool authenticated;
+	bool registered;
+	string messageBuffer;
+	string sendBuffer;
+	time_t lastPingSent;
+	time_t lastPongReceived;
+	string lastPingToken;
+	bool awaitingPong;
 
 public:
 	Client(int fd);
@@ -52,13 +53,13 @@ public:
 	void appendToBuffer(const string& data);
 	vector<string> getCompleteMessages();
 	bool hasDataToSend() const { return !sendBuffer.empty(); }
-    void tryFlushSendBuffer();
+	void tryFlushSendBuffer();
 
-    void updateLastPongReceived() { lastPongReceived = time(NULL); }
-    bool isPingTimedOut() const;
-    void sendPing();
-    bool verifyPongToken(const string& token);
-    bool needsPing() const;
+	void updateLastPongReceived() { lastPongReceived = time(NULL); }
+	bool isPingTimedOut() const;
+	void sendPing();
+	bool verifyPongToken(const string& token);
+	bool needsPing() const;
 };
 
 #endif

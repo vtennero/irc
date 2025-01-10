@@ -10,6 +10,7 @@
 #include "Channel.hpp"
 #include "CommandHandler.hpp"
 #include <map>
+# include "Debug.hpp"
 
 using std::string;
 using std::vector;
@@ -58,6 +59,8 @@ public:
     bool isChannelExist(const string& channelName) const;
     Channel* getChannel(const string& channelName);
 	Channel* createChannel(const string& channelName); // Remove inline implementation
+
+    int getSocket() const { return serverSocket; }
 
     vector<Channel*> getAllChannels() {
         vector<Channel*> result;

@@ -4,8 +4,8 @@
 #include <iostream>
 
 void PingCommandHandler::handle(Client& client, const Message& message) {
-    cout << "[DEBUG] PING command received with token: " <<
-        (message.getParams().empty() ? "none" : message.getParams()[0]) << endl;
+    cout << SALMON "[" << __PRETTY_FUNCTION__ << "]" RESET " PING command received with token: " << (message.getParams().empty() ? "none" : message.getParams()[0]) << endl;
+
 
     string token = message.getParams().empty() ?
                        server.getServerName() :
@@ -14,6 +14,7 @@ void PingCommandHandler::handle(Client& client, const Message& message) {
     // Simple PONG response format: "PONG :token"
     string response = "PONG :" + token + "\r\n";
 
-    cout << "[DEBUG] Sending PONG response: " << response;
+    cout << SALMON "[" << __PRETTY_FUNCTION__ << "]" RESET " Sending PONG response: " << response << endl;
+
     client.send(response);
 }

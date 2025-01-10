@@ -10,9 +10,15 @@ using std::endl;
 using std::cerr;
 
 class WhoisCommandHandler : public CommandHandler {
+private:
+	void sendNoNicknameError(Client& client) const;
+	void sendNoSuchNickError(Client& client, const string& targetNick) const;
+	void sendWhoisInfo(Client& client, Client* target) const;
+	Client* findAndValidateTarget(Client& client, const string& targetNick) const;
+
 public:
-    WhoisCommandHandler(Server& server) : CommandHandler(server) {}
-    virtual void handle(Client& client, const Message& message);
+	WhoisCommandHandler(Server& server) : CommandHandler(server) {}
+	virtual void handle(Client& client, const Message& message);
 };
 
 #endif

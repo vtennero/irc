@@ -3,6 +3,7 @@
 
 #include "CommandHandler.hpp"
 #include <map>
+# include "Debug.hpp"
 
 using std::string;
 using std::vector;

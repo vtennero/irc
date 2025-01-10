@@ -3,6 +3,7 @@
 
 #include "CommandHandler.hpp"
 #include "Channel.hpp"
+# include "Debug.hpp"
 
 class ListCommandHandler : public CommandHandler {
 public:

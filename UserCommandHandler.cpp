@@ -5,11 +5,15 @@
 #include <iostream>
 #include <sstream>
 
+
+
+
 void UserCommandHandler::handle(Client& client, const Message& message) {
-	cout << "[DEBUG] function handle called for client fd: " << client.getFd() << endl;
+cout << ORANGE "[" << __PRETTY_FUNCTION__ << "]" RESET " called for client fd: " << client.getFd() << endl;
 
 	if (client.isRegistered()) {
-		cout << "[DEBUG] Client already registered, preventing reregistration" << endl;
+cout << ORANGE "[" << __PRETTY_FUNCTION__ << "]" RESET " Client already registered, preventing reregistration" << endl;
+
 		client.send("462 " + client.getNickname() + " :You may not reregister\r\n");
 		return;
 	}
@@ -45,7 +49,7 @@ if (client.isAuthenticated() && !client.getNickname().empty()) {
 
 void UserCommandHandler::sendWelcomeMessages(Client& client)
 {
-	cout << "[DEBUG] Sending welcome messages to client" << endl;
+cout << ORANGE "[" << __PRETTY_FUNCTION__ << "]" RESET " Sending welcome messages to client" << endl;
 
 
 	string nickname = client.getNickname();
