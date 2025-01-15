@@ -13,21 +13,25 @@ void KickCommandHandler::handle(Client& client, const Message& message) {
     //check if target is in channel
     //check if client is operator
     //kick target
-
-    if (!server->isChannelExist(message.getParams()[0])) {
+/*
+    if (!server.isChannelExist(message.getParams()[0])) {
         client.send("403 " + client.getNickname() + " " + message.getParams()[0] + " : Channel doesn't exist\r\n");
         return;
-    }
-    Channel *channel = message.getParams()[0];
+    }*/
+    Channel *channel = server.getChannel(message.getParams()[0];)
+	if (!channel) {
+        client.send("403 " + client.getNickname() + " " + message.getParams()[0] + " : Channel doesn't exist\r\n");
+        return;
+	}
     if (!channel->hasClient(client)) {
         client.send("442 " + client.getNickname() + " " + message.getParams()[0] + " : You're not on that channel\r\n");
         return;
     }
-    if (!channel->isOperator(client)) {
+    if (!channel->isOperator(&client)) {
         client.send("482 " + client.getNickname() + " " + message.getParams()[0] + " : You're not a channel operator\r\n");
         return;
     }
-    Client *target = server->findClientByNickname(message.getParams()[1]);
+    Client *target = server.findClientByNickname(message.getParams()[1]);
     if (!target || !channel->hasClient(target)) {
         client.send("401 " + client.getNickname() + " " + message.getParams()[1] + " : No such nick/channel\r\n");
         return;
