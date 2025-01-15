@@ -18,6 +18,12 @@ void PrivmsgCommandHandler::handle(Client& sender, const Message& message) {
 	cout << ORANGE "[" << __PRETTY_FUNCTION__ << "]" RESET " PRIVMSG - Attempting to send from " << sender.getNickname() << " to " << target << endl;
 	cout << ORANGE "[" << __PRETTY_FUNCTION__ << "]" RESET " PRIVMSG - Message content: " << content << endl;
 
+	//Jeff's entry
+	//check if target is a channel
+	if (target[0] == '#') {
+		sendChannelMessage(sender, target, content);
+		return;
+	}
 	// Find the target client
 	Client* targetClient = server.findClientByNickname(target);
 	if (targetClient) {
