@@ -12,6 +12,7 @@
 #include "JoinCommandHandler.hpp"
 #include "PartCommandHandler.hpp"
 #include "ListCommandHandler.hpp"
+#include "KickCommandHandler.hpp"
 #include "NamesCommandHandler.hpp"
 
 #include <iostream>
