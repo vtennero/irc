@@ -18,12 +18,12 @@ void KickCommandHandler::handle(Client& client, const Message& message) {
         client.send("403 " + client.getNickname() + " " + message.getParams()[0] + " : Channel doesn't exist\r\n");
         return;
     }*/
-    Channel *channel = server.getChannel(message.getParams()[0];)
+    Channel *channel = server.getChannel(message.getParams()[0]);
 	if (!channel) {
         client.send("403 " + client.getNickname() + " " + message.getParams()[0] + " : Channel doesn't exist\r\n");
         return;
 	}
-    if (!channel->hasClient(client)) {
+    if (!channel->hasClient(&client)) {
         client.send("442 " + client.getNickname() + " " + message.getParams()[0] + " : You're not on that channel\r\n");
         return;
     }
