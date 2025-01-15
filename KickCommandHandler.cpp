@@ -1,4 +1,4 @@
-#include "JoinCommandHandler.hpp"
+#include "KickCommandHandler.hpp"
 #include "Server.hpp"
 #include "Message.hpp"
 #include "Channel.hpp"
