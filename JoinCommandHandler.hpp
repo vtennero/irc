@@ -7,7 +7,7 @@
 
 class JoinCommandHandler : public CommandHandler {
 public:
-    JoinCommandHandler(Server& server) : CommandHandler(server) {}
+    JoinCommandHandler(Server& server);
     virtual void handle(Client& client, const Message& message);
 
 

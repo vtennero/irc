@@ -38,6 +38,10 @@ private:
 	bool authenticateClient(const string& password, int clientFd);
     void checkClientPings();  // Add ping check method declaration
 
+    static Server* instance;  // Add this static member
+    static void signalHandler(int signum);  // Add this static method
+    void cleanup();  // Add this instance method
+
 public:
 	Server(int port, const string& password);
 	~Server();
@@ -60,15 +64,13 @@ public:
     Channel* getChannel(const string& channelName);
 	Channel* createChannel(const string& channelName); // Remove inline implementation
 
-    int getSocket() const { return serverSocket; }
+    int getSocket() const;
 
-    vector<Channel*> getAllChannels() {
-        vector<Channel*> result;
-        for (map<string, Channel>::iterator it = channels.begin(); it != channels.end(); ++it) {
-            result.push_back(&(it->second));
-        }
-        return result;
-    }
+    vector<Channel*> getAllChannels();
+    void setupSignalHandling();  // Changed to non-static
+
+	void listAvailableCommands();
+
 };
 
 #endif

@@ -9,6 +9,9 @@ string toString(size_t value) {
 	return oss.str();
 }
 
+ListCommandHandler::ListCommandHandler(Server& server) : CommandHandler(server) {};
+
+
 void ListCommandHandler::handle(Client& client, const Message& message) {
 	// Start of list
 	client.send("321 " + client.getNickname() + " Channel :Users Name\r\n");

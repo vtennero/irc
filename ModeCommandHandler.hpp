@@ -12,7 +12,7 @@ using std::cerr;
 
 class ModeCommandHandler : public CommandHandler {
 public:
-    ModeCommandHandler(Server& server) : CommandHandler(server) {}
+    ModeCommandHandler(Server& server);
     virtual void handle(Client& client, const Message& message);
 };
 

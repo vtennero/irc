@@ -7,7 +7,7 @@
 
 class PartCommandHandler : public CommandHandler {
 public:
-    PartCommandHandler(Server& server) : CommandHandler(server) {}
+    PartCommandHandler(Server& server);
     virtual void handle(Client& client, const Message& message);
 
 private:

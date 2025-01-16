@@ -2,6 +2,29 @@
 #include <algorithm>
 #include <iostream>
 
+Channel::Channel() : name(""), topic(""), mode("") {}
+
+
+void Channel::setTopic(const string& newTopic) {
+    topic = newTopic;
+}
+
+const string& Channel::getTopic() const {
+    return topic;
+}
+
+vector<Client*> Channel::getClients() const {
+    return clients;
+}
+
+void Channel::setKey(const string& newKey) {
+    key = newKey;
+}
+
+bool Channel::checkKey(const string& attemptedKey) const {
+    return key.empty() || key == attemptedKey;
+}
+
 Channel::Channel(const string& channelName) : name(channelName)
 {
 	cout << YELLOW "[" << __PRETTY_FUNCTION__ << "]" RESET " called with name: " << channelName << endl;

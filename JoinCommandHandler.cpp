@@ -2,6 +2,9 @@
 #include "Server.hpp"
 #include "Message.hpp"
 
+JoinCommandHandler::JoinCommandHandler(Server& server) : CommandHandler(server) {}
+
+
 void JoinCommandHandler::handle(Client& client, const Message& message) {
 	if (message.getParams().empty()) {
 		client.send("461 " + client.getNickname() + " JOIN :Not enough parameters\r\n");

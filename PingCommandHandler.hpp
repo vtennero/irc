@@ -12,7 +12,7 @@ using std::cerr;
 
 class PingCommandHandler : public CommandHandler {
 public:
-    PingCommandHandler(Server& server) : CommandHandler(server) {}
+    PingCommandHandler(Server& server);
     virtual void handle(Client& client, const Message& message);
 };
 

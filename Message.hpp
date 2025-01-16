@@ -21,12 +21,13 @@ private:
 	string token;  // Add token field for PING/PONG messages
 
 public:
+
 	Message(const string& rawMessage);
-	string getCommand() const { return command; }
-	string getPrefix() const { return prefix; }
-	const vector<string>& getParams() const { return params; }
-	const string& getRawMessage() const { return rawMessage; }
-	const string& getToken() const { return token; }  // Add getter for token
+	string getCommand() const;
+	string getPrefix() const;
+	const vector<string>& getParams() const;
+	const string& getRawMessage() const;
+	const string& getToken() const;
 
 private:
 	void parseToken();  // Add method to extract token

@@ -3,6 +3,9 @@
 #include "Client.hpp"
 #include <iostream>
 
+PongCommandHandler::PongCommandHandler(Server& server) : CommandHandler(server) {}
+
+
 void PongCommandHandler::handle(Client& client, const Message& message) {
     if (message.getParams().empty()) {
         cout << SALMON "[" << __PRETTY_FUNCTION__ << "]" RESET " PONG received without token" << endl;

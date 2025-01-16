@@ -7,7 +7,7 @@
 
 class NamesCommandHandler : public CommandHandler {
 public:
-    NamesCommandHandler(Server& server) : CommandHandler(server) {}
+    NamesCommandHandler(Server& server);
     virtual void handle(Client& client, const Message& message);
 
 private:

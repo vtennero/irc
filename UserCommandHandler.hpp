@@ -11,7 +11,7 @@ using std::cerr;
 
 class UserCommandHandler : public CommandHandler {
 public:
-	UserCommandHandler(Server& server) : CommandHandler(server) {}
+	UserCommandHandler(Server& server);
 	virtual void handle(Client& client, const Message& message);
 private:
 	void sendWelcomeMessages(Client& client);

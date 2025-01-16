@@ -24,8 +24,81 @@
 #include <fcntl.h>
 #include <sstream>
 #include <algorithm>
-
+#include <signal.h>
 #include <stdio.h>
+
+int Server::getSocket() const { return serverSocket; }
+
+vector<Channel*> Server::getAllChannels() {
+        vector<Channel*> result;
+        for (map<string, Channel>::iterator it = channels.begin(); it != channels.end(); ++it) {
+            result.push_back(&(it->second));
+        }
+        return result;
+    };
+
+// listing commands
+void Server::listAvailableCommands() {
+	cerr << RED "[" << __PRETTY_FUNCTION__ << "]" RESET "Available commands:" << endl;
+	for (map<string, CommandHandler*>::iterator it = commandHandlers.begin();
+		 it != commandHandlers.end(); ++it) {
+		cerr << RED "[" << __PRETTY_FUNCTION__ << "]" RESET "  " << it->first << endl;
+	}
+}
+
+// cleaning
+Server* Server::instance = NULL;  // Changed nullptr to NULL for C++98
+
+void Server::setupSignalHandling() {
+	instance = this;  // Now this is valid since method is non-static
+	struct sigaction sa;
+	sa.sa_handler = &Server::signalHandler;
+	sa.sa_flags = 0;
+	sigemptyset(&sa.sa_mask);
+
+	if (sigaction(SIGINT, &sa, NULL) == -1) {
+		cerr << RED "[" << __PRETTY_FUNCTION__ << "]" RESET " Error setting up signal handler: " << strerror(errno) << endl;
+	}
+}
+
+void Server::signalHandler(int signum) {
+	if (signum == SIGINT) {
+		cout << GREEN "[" << __PRETTY_FUNCTION__ << "]" RESET " Received SIGINT (Ctrl+C). Cleaning up..." << endl;
+		if (instance != NULL) {  // Changed nullptr to NULL
+			instance->cleanup();
+		}
+		exit(0);
+	}
+}
+
+void Server::cleanup() {
+	cout << GREEN "[" << __PRETTY_FUNCTION__ << "]" RESET " Performing server cleanup..." << endl;
+
+	// Close all client connections
+	for (map<int, Client>::iterator it = clients.begin(); it != clients.end(); ++it) {
+		close(it->first);
+	}
+	clients.clear();
+	clientFds.clear();
+
+	// Close server socket
+	if (serverSocket != -1) {
+		close(serverSocket);
+		serverSocket = -1;
+	}
+
+	// Delete command handlers
+	for (map<string, CommandHandler*>::iterator it = commandHandlers.begin();
+		 it != commandHandlers.end(); ++it) {
+		delete it->second;
+	}
+	commandHandlers.clear();
+
+	// Clear channels
+	channels.clear();
+
+	cout << GREEN "[" << __PRETTY_FUNCTION__ << "]" RESET " Cleanup complete. Exiting..." << endl;
+}
 
 // privmsg
 void Server::sendToClient(const string& nickname, const string& message) {
@@ -104,42 +177,42 @@ void Server::setNonBlocking(int fd)
 	cout << GREEN "[" << __PRETTY_FUNCTION__ << "]" RESET " called" << endl;
 	if (fcntl(fd, F_SETFL, O_NONBLOCK) == -1)
 	{
-		cerr << "Error setting socket to non-blocking: " << strerror(errno) << endl;
+		cerr << RED "[" << __PRETTY_FUNCTION__ << "]" RESET " Error setting socket to non-blocking: " << strerror(errno) << endl;
 	}
 }
 
 Server::Server(int port, const string& password) : serverSocket(-1), serverPassword(password)
 {
-    cout << GREEN "[" << __PRETTY_FUNCTION__ << "]" RESET " called" << endl;
-    serverSocket = socket(AF_INET, SOCK_STREAM, 0);
-    if (serverSocket == -1)
-    {
-        cerr << "Error creating socket: " << strerror(errno) << endl;
-        return;
-    }
+	cout << GREEN "[" << __PRETTY_FUNCTION__ << "]" RESET " called" << endl;
+	serverSocket = socket(AF_INET, SOCK_STREAM, 0);
+	if (serverSocket == -1)
+	{
+		cerr << RED "[" << __PRETTY_FUNCTION__ << "]" RESET " Error creating socket: " << strerror(errno) << endl;
+		return;
+	}
 
-    sockaddr_in serverAddr;
-    serverAddr.sin_family = AF_INET;
-    serverAddr.sin_addr.s_addr = INADDR_ANY;
-    serverAddr.sin_port = htons(port);
+	sockaddr_in serverAddr;
+	serverAddr.sin_family = AF_INET;
+	serverAddr.sin_addr.s_addr = INADDR_ANY;
+	serverAddr.sin_port = htons(port);
 
-    if (bind(serverSocket, (struct sockaddr*)&serverAddr, sizeof(serverAddr)) == -1)
-    {
-        cerr << "Error binding socket: " << strerror(errno) << endl;
-        close(serverSocket);
-        serverSocket = -1;  // Mark as invalid
-        return;
-    }
+	if (bind(serverSocket, (struct sockaddr*)&serverAddr, sizeof(serverAddr)) == -1)
+	{
+		cerr << RED "[" << __PRETTY_FUNCTION__ << "]" RESET " Error binding socket: " << strerror(errno) << endl;
+		close(serverSocket);
+		serverSocket = -1;  // Mark as invalid
+		return;
+	}
 
-    if (listen(serverSocket, 5) == -1)
-    {
-        cerr << "Error listening on socket: " << strerror(errno) << endl;
-        close(serverSocket);
-        serverSocket = -1;  // Mark as invalid
-        return;
-    }
+	if (listen(serverSocket, 5) == -1)
+	{
+		cerr << RED "[" << __PRETTY_FUNCTION__ << "]" RESET " Error listening on socket: " << strerror(errno) << endl;
+		close(serverSocket);
+		serverSocket = -1;  // Mark as invalid
+		return;
+	}
 
-    setNonBlocking(serverSocket);
+	setNonBlocking(serverSocket);
 
 	commandHandlers["NICK"] = new NickCommandHandler(*this);
 	commandHandlers["USER"] = new UserCommandHandler(*this);
@@ -154,7 +227,8 @@ Server::Server(int port, const string& password) : serverSocket(-1), serverPassw
 	commandHandlers["LIST"] = new ListCommandHandler(*this);
 	commandHandlers["NAMES"] = new NamesCommandHandler(*this);
 
-	cout << "Server listening on port " << port << endl;
+	setupSignalHandling();
+	cout << GREEN "[" << __PRETTY_FUNCTION__ << "]" RESET "Server listening on port " << port << endl;
 }
 
 Server::~Server()
@@ -185,6 +259,7 @@ void Server::run()
 	pollfd serverPollFd;
 	serverPollFd.fd = serverSocket;
 	serverPollFd.events = POLLIN;
+	serverPollFd.revents = 0;  // Initialize revents to 0
 	clientFds.push_back(serverPollFd);
 
 	while (true)
@@ -206,7 +281,7 @@ void Server::run()
 		int pollResult = poll(&clientFds[0], clientFds.size(), 1000); // 1 second timeout
 		if (pollResult == -1)
 		{
-			cerr << "Error in poll" << endl;
+			cerr << RED "[" << __PRETTY_FUNCTION__ << "]" RESET "Error in poll" << endl;
 			break;
 		}
 		// cout << GREEN "[" << __PRETTY_FUNCTION__ << "]" RESET " Poll returned " << pollResult << " events" << endl;
@@ -247,7 +322,7 @@ void Server::handleNewConnection()
 	int clientSocket = accept(serverSocket, (struct sockaddr*)&clientAddr, &clientAddrLen);
 	if (clientSocket == -1)
 	{
-		cerr << "Error accepting client connection: " << strerror(errno) << endl;
+		 cerr << RED "[" << __PRETTY_FUNCTION__ << "]" RESET "Error accepting client connection: " << strerror(errno) << endl;
 		return;
 	}
 	cout << GREEN "[" << __PRETTY_FUNCTION__ << "]" RESET " Accepted new connection on socket " << clientSocket << endl;
@@ -258,13 +333,13 @@ void Server::handleNewConnection()
 	// Set smaller send buffer to help test non-blocking behavior
 	int sndBufSize = 4096; // 4KB send buffer
 	if (setsockopt(clientSocket, SOL_SOCKET, SO_SNDBUF, &sndBufSize, sizeof(sndBufSize)) == -1) {
-		cerr << "Warning: Could not set send buffer size: " << strerror(errno) << endl;
+		cerr << RED "[" << __PRETTY_FUNCTION__ << "]" RESET "Warning: Could not set send buffer size: " << strerror(errno) << endl;
 	}
 
 	char hostBuffer[INET_ADDRSTRLEN];
 	if (inet_ntop(AF_INET, &(clientAddr.sin_addr), hostBuffer, INET_ADDRSTRLEN) == NULL)
 	{
-		cerr << "Error converting client address to string: " << strerror(errno) << endl;
+		cerr << RED "[" << __PRETTY_FUNCTION__ << "]" RESET "Error converting client address to string: " << strerror(errno) << endl;
 		close(clientSocket);
 		return;
 	}
@@ -275,6 +350,7 @@ void Server::handleNewConnection()
 	pollfd clientPollFd;
 	clientPollFd.fd = clientSocket;
 	clientPollFd.events = POLLIN;
+	clientPollFd.revents = 0;  // Initialize revents to 0
 	clientFds.push_back(clientPollFd);
 
 	cout << GREEN "[" << __PRETTY_FUNCTION__ << "]" RESET " New client connected: " << hostBuffer << endl;
@@ -321,7 +397,7 @@ void Server::handleClientData(size_t index)
 		}
 		else
 		{
-			cerr << "Error reading from client: " << strerror(errno) << endl;
+			cerr << RED "[" << __PRETTY_FUNCTION__ << "]" RESET "Error reading from client: " << strerror(errno) << endl;
 		}
 		close(clientFds[index].fd);
 		clientFds.erase(clientFds.begin() + index);
@@ -386,7 +462,8 @@ void Server::handleClientData(size_t index)
 				}
 				else
 				{
-					cout << "Unknown command: " << parsedMessage.getCommand() << endl;
+					cerr << RED "[" << __PRETTY_FUNCTION__ << "]" RESET "Unknown command: " << parsedMessage.getCommand() << endl;
+					listAvailableCommands();
 				}
 			}
 		}
@@ -395,19 +472,19 @@ void Server::handleClientData(size_t index)
 
 bool Server::authenticateClient(const string& password, int clientFd)
 {
-    // cout << "[" << __PRETTY_FUNCTION__ <<"] called" << endl;
+	// cout << "[" << __PRETTY_FUNCTION__ <<"] called" << endl;
 	cout << GREEN "[" << __PRETTY_FUNCTION__ << "]" RESET " called" << endl;
-    if (clients[clientFd].isAuthenticated())
-    {
-        cout << "Client already authenticated" << endl;
-        return true;
-    }
-    if (password == serverPassword)
-    {
-        clients[clientFd].setAuthenticated(true);
-        return true;
-    }
-    return false;
+	if (clients[clientFd].isAuthenticated())
+	{
+		cout << "Client already authenticated" << endl;
+		return true;
+	}
+	if (password == serverPassword)
+	{
+		clients[clientFd].setAuthenticated(true);
+		return true;
+	}
+	return false;
 }
 
 string Server::getServerName()

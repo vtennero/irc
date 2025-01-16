@@ -34,16 +34,19 @@ public:
 	Client();
 	Client(int fd, const string& hostname);
 
+	void setNickname(const string& nick);
+	void setUsername(const string& user);
+	void setRealname(const string& real);
+	void setAuthenticated(bool auth);
+	void setRegistered(bool reg);
+	string getNickname() const;
+	string getUsername() const;
+	bool isAuthenticated() const;
+	bool isRegistered() const;
+	bool hasDataToSend() const;
+	void updateLastPongReceived();
+
 	int getFd() const;
-	void setNickname(const string& nick) { nickname = nick; }
-	void setUsername(const string& user) { username = user; }
-	void setRealname(const string& real) { realname = real; }
-	void setAuthenticated(bool auth) { authenticated = auth; }
-	void setRegistered(bool reg) { registered = reg; }
-	string getNickname() const { return nickname; }
-	string getUsername() const { return username; }
-	bool isAuthenticated() const { return authenticated; }
-	bool isRegistered() const { return registered; }
 	void send(const string& message);
 
 	void setHostname(const string& hostname);
@@ -52,10 +55,8 @@ public:
 	// buffer mgt
 	void appendToBuffer(const string& data);
 	vector<string> getCompleteMessages();
-	bool hasDataToSend() const { return !sendBuffer.empty(); }
 	void tryFlushSendBuffer();
 
-	void updateLastPongReceived() { lastPongReceived = time(NULL); }
 	bool isPingTimedOut() const;
 	void sendPing();
 	bool verifyPongToken(const string& token);

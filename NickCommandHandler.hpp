@@ -13,7 +13,7 @@ using std::cerr;
 
 class NickCommandHandler : public CommandHandler {
 public:
-	NickCommandHandler(Server& server) : CommandHandler(server) {}
+	NickCommandHandler(Server& server);
 	bool isValidNickname(const string& nick);
 	virtual void handle(Client& client, const Message& message);
 };

@@ -1,6 +1,8 @@
 #include "PartCommandHandler.hpp"
 #include "Server.hpp"
 
+PartCommandHandler::PartCommandHandler(Server& server) : CommandHandler(server) {}
+
 void PartCommandHandler::handle(Client& client, const Message& message) {
     if (message.getParams().empty()) {
         client.send("461 " + client.getNickname() + " PART :Not enough parameters\r\n");

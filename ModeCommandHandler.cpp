@@ -3,6 +3,9 @@
 #include "Client.hpp"
 #include <iostream>
 
+ModeCommandHandler::ModeCommandHandler(Server& server) : CommandHandler(server) {}
+
+
 void ModeCommandHandler::handle(Client& client, const Message& message) {
 	// Basic MODE implementation - just acknowledge the mode request
 	if (message.getParams().empty()) {

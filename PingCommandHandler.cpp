@@ -3,6 +3,9 @@
 #include "Client.hpp"
 #include <iostream>
 
+PingCommandHandler::PingCommandHandler(Server& server) : CommandHandler(server) {}
+
+
 void PingCommandHandler::handle(Client& client, const Message& message) {
     cout << SALMON "[" << __PRETTY_FUNCTION__ << "]" RESET " PING command received with token: " << (message.getParams().empty() ? "none" : message.getParams()[0]) << endl;
 

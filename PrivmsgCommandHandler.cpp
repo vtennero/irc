@@ -5,6 +5,8 @@
 #include "Message.hpp"
 #include <iostream>
 
+PrivmsgCommandHandler::PrivmsgCommandHandler(Server& server) : CommandHandler(server) {}
+
 
 void PrivmsgCommandHandler::handle(Client& sender, const Message& message) {
 	if (message.getParams().size() < 2) {
@@ -41,14 +43,13 @@ void PrivmsgCommandHandler::handle(Client& sender, const Message& message) {
 	}
 }
 
-
 string PrivmsgCommandHandler::formatMessage(const Client& sender, const string& target, const string& message) {
 	// Ensure proper IRC message format with \r\n
 	return ":" + sender.getNickname() +
-		   "!" + sender.getUsername() +
-		   "@" + sender.getHostname() +
-		   " PRIVMSG " + target +
-		   " :" + message + "\r\n";
+			"!" + sender.getUsername() +
+			"@" + sender.getHostname() +
+			" PRIVMSG " + target +
+			" :" + message + "\r\n";
 }
 
 void PrivmsgCommandHandler::sendPrivateMessage(Client& sender, const string& targetNick, const string& message) {

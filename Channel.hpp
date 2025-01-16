@@ -21,7 +21,14 @@ private:
 	string key;
 
 public:
-	Channel() : name(""), topic(""), mode("") {}
+	void setTopic(const string& newTopic);
+	const string& getTopic() const;
+	vector<Client*> getClients() const;
+	void setKey(const string& newKey);
+	bool checkKey(const string& attemptedKey) const;
+
+
+	Channel();
 	Channel(const string& channelName);
 
 	void addClient(Client* client);
@@ -30,9 +37,6 @@ public:
 	void broadcastMessage(const string& message, const Client* exclude = NULL);
 
 	const string& getName() const;
-	void setTopic(const string& newTopic) { topic = newTopic; }
-	const string& getTopic() const { return topic; }
-	vector<Client*> getClients() const { return clients; }
 
 	// Channel management
 	void addOperator(Client* client);
@@ -43,8 +47,6 @@ public:
 	size_t getUserCount() const;
 	vector<Client*> getClientList() const;
 	string getClientListString() const;
-	void setKey(const string& newKey) { key = newKey; }
-	bool checkKey(const string& attemptedKey) const { return key.empty() || key == attemptedKey; }
 
 };
 

@@ -1,6 +1,8 @@
 #include "NamesCommandHandler.hpp"
 #include "Server.hpp"
 
+NamesCommandHandler::NamesCommandHandler(Server& server) : CommandHandler(server) {}
+
 void NamesCommandHandler::handle(Client& client, const Message& message) {
     if (message.getParams().empty()) {
         // List all channels

@@ -2,6 +2,25 @@
 #include <sstream>
 #include <iostream>
 
+string Message::getCommand() const {
+    return command;
+}
+
+string Message::getPrefix() const {
+    return prefix;
+}
+
+const vector<string>& Message::getParams() const {
+    return params;
+}
+
+const string& Message::getRawMessage() const {
+    return rawMessage;
+}
+
+const string& Message::getToken() const {
+    return token;
+}
 
 void Message::parseToken()
 {

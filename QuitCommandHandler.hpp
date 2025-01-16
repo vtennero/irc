@@ -14,7 +14,7 @@ using std::ostringstream;
 
 class QuitCommandHandler : public CommandHandler {
 public:
-	QuitCommandHandler(Server& server) : CommandHandler(server) {}
+	QuitCommandHandler(Server& server);
 	virtual void handle(Client& client, const Message& message);
 };
 

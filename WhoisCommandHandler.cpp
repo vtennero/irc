@@ -3,6 +3,9 @@
 #include "Client.hpp"
 #include <iostream>
 
+WhoisCommandHandler::WhoisCommandHandler(Server& server) : CommandHandler(server) {}
+
+
 void WhoisCommandHandler::handle(Client& client, const Message& message) {
 	if (message.getParams().empty()) {
 		sendNoNicknameError(client);

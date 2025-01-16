@@ -12,7 +12,7 @@ using std::cerr;
 
 class PrivmsgCommandHandler : public CommandHandler {
 public:
-    PrivmsgCommandHandler(Server& server) : CommandHandler(server) {}
+    PrivmsgCommandHandler(Server& server);
     virtual void handle(Client& client, const Message& message);
 
 private:

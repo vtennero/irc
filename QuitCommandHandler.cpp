@@ -6,13 +6,7 @@
 #include <sstream>
 #include <unistd.h>
 
-
-
-
-
-
-
-
+QuitCommandHandler::QuitCommandHandler(Server& server) : CommandHandler(server) {}
 
 void QuitCommandHandler::handle(Client& client, const Message& message) {
 cout << ORANGE "[" << __PRETTY_FUNCTION__ << "]" RESET " called for client fd: " << client.getFd() << endl;

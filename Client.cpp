@@ -9,6 +9,49 @@
 #include <ctime>
 #include <unistd.h>
 
+void Client::setNickname(const string& nick) {
+    nickname = nick;
+}
+
+void Client::setUsername(const string& user) {
+    username = user;
+}
+
+void Client::setRealname(const string& real) {
+    realname = real;
+}
+
+void Client::setAuthenticated(bool auth) {
+    authenticated = auth;
+}
+
+void Client::setRegistered(bool reg) {
+    registered = reg;
+}
+
+string Client::getNickname() const {
+    return nickname;
+}
+
+string Client::getUsername() const {
+    return username;
+}
+
+bool Client::isAuthenticated() const {
+    return authenticated;
+}
+
+bool Client::isRegistered() const {
+    return registered;
+}
+
+bool Client::hasDataToSend() const {
+    return !sendBuffer.empty();
+}
+
+void Client::updateLastPongReceived() {
+    lastPongReceived = time(NULL);
+}
 
 Client::Client() : fd(-1), nickname("*"), authenticated(false), registered(false)
 {
@@ -72,7 +115,7 @@ void Client::tryFlushSendBuffer() {
 				return;
 			}
 			else {
-				cerr << "Error sending to fd " << fd << ": " << strerror(errno) << endl;
+				cerr << RED "[" << __PRETTY_FUNCTION__ << "]" RESET " Error sending to fd " << fd << ": " << strerror(errno) << endl;
 				sendBuffer.clear();
 				return;
 			}

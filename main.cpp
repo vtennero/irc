@@ -7,7 +7,7 @@ int main(int argc, char* argv[]) {
 
 	if (argc != 3) {
 		cout << MAGENTA "[" << __PRETTY_FUNCTION__ << "]" RESET " Invalid number of arguments" << endl;
-		cerr << "Usage: " << argv[0] << " <port> <password>" << endl;
+		cerr << RED "[" << __PRETTY_FUNCTION__ << "]" RESET " Usage: " << argv[0] << " <port> <password>" << endl;
 		return 1;
 	}
 

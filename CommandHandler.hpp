@@ -12,8 +12,8 @@ protected:
 	Server& server;
 
 public:
-	CommandHandler(Server& server) : server(server) {}
-	virtual ~CommandHandler() {}
+	CommandHandler(Server& server);
+	virtual ~CommandHandler();
 	virtual void handle(Client& client, const Message& message) = 0;
 };
 

@@ -5,7 +5,7 @@
 #include <iostream>
 #include <sstream>
 
-
+UserCommandHandler::UserCommandHandler(Server& server) : CommandHandler(server) {}
 
 
 void UserCommandHandler::handle(Client& client, const Message& message) {

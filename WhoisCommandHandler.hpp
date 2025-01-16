@@ -17,7 +17,7 @@ private:
 	Client* findAndValidateTarget(Client& client, const string& targetNick) const;
 
 public:
-	WhoisCommandHandler(Server& server) : CommandHandler(server) {}
+	WhoisCommandHandler(Server& server);
 	virtual void handle(Client& client, const Message& message);
 };
 
