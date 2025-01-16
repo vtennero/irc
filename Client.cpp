@@ -10,47 +10,47 @@
 #include <unistd.h>
 
 void Client::setNickname(const string& nick) {
-    nickname = nick;
+	nickname = nick;
 }
 
 void Client::setUsername(const string& user) {
-    username = user;
+	username = user;
 }
 
 void Client::setRealname(const string& real) {
-    realname = real;
+	realname = real;
 }
 
 void Client::setAuthenticated(bool auth) {
-    authenticated = auth;
+	authenticated = auth;
 }
 
 void Client::setRegistered(bool reg) {
-    registered = reg;
+	registered = reg;
 }
 
 string Client::getNickname() const {
-    return nickname;
+	return nickname;
 }
 
 string Client::getUsername() const {
-    return username;
+	return username;
 }
 
 bool Client::isAuthenticated() const {
-    return authenticated;
+	return authenticated;
 }
 
 bool Client::isRegistered() const {
-    return registered;
+	return registered;
 }
 
 bool Client::hasDataToSend() const {
-    return !sendBuffer.empty();
+	return !sendBuffer.empty();
 }
 
 void Client::updateLastPongReceived() {
-    lastPongReceived = time(NULL);
+	lastPongReceived = time(NULL);
 }
 
 Client::Client() : fd(-1), nickname("*"), authenticated(false), registered(false)
@@ -198,39 +198,95 @@ void Client::appendToBuffer(const string& data)
 	cout << BRIGHT_BLUE "[" << __PRETTY_FUNCTION__ << "]" RESET " Current buffer: [" << messageBuffer << "]" << endl;
 }
 
+// vector<string> Client::getCompleteMessages()
+// {
+// 	cout << BRIGHT_BLUE "[" << __PRETTY_FUNCTION__ << "]" RESET " called" << endl;
+// 	vector<string> completeMessages;
+// 	size_t pos;
+
+// 	// Trim any leading whitespace/newlines
+// 	while (!messageBuffer.empty() && (messageBuffer[0] == '\n' || messageBuffer[0] == '\r' || messageBuffer[0] == ' '))
+// 	{
+// 		cout << BRIGHT_BLUE "[" << __PRETTY_FUNCTION__ << "]" RESET " Trimming leading character: " << (int)messageBuffer[0] << endl;
+// 		messageBuffer.erase(0, 1);
+// 	}
+
+// 	while ((pos = messageBuffer.find("\r\n")) != string::npos)
+// 	{
+// 		string completeMessage = messageBuffer.substr(0, pos);
+// 		cout << BRIGHT_BLUE "[" << __PRETTY_FUNCTION__ << "]" RESET " Found message ending at pos " << pos << ": " << completeMessage << endl;
+
+// 		// Special debug for server messages
+// 		if (!completeMessage.empty() && completeMessage[0] == ':') {
+// 			cout << BRIGHT_BLUE "[" << __PRETTY_FUNCTION__ << "]" RESET " Found server message: " << completeMessage << endl;
+// 		}
+
+// 		completeMessages.push_back(completeMessage);
+// 		messageBuffer.erase(0, pos + 2);
+
+// 		// Trim again after extracting a message
+// 		while (!messageBuffer.empty() && (messageBuffer[0] == '\n' || messageBuffer[0] == '\r' || messageBuffer[0] == ' '))
+// 		{
+// 			cout << BRIGHT_BLUE "[" << __PRETTY_FUNCTION__ << "]" RESET " Trimming trailing character: " << (int)messageBuffer[0] << endl;
+// 			messageBuffer.erase(0, 1);
+// 		}
+// 	}
+
+// 	return completeMessages;
+// }
+
+
+
+
 vector<string> Client::getCompleteMessages()
 {
 	cout << BRIGHT_BLUE "[" << __PRETTY_FUNCTION__ << "]" RESET " called" << endl;
 	vector<string> completeMessages;
 	size_t pos;
 
-	// Trim any leading whitespace/newlines
-	while (!messageBuffer.empty() && (messageBuffer[0] == '\n' || messageBuffer[0] == '\r' || messageBuffer[0] == ' '))
-	{
-		cout << BRIGHT_BLUE "[" << __PRETTY_FUNCTION__ << "]" RESET " Trimming leading character: " << (int)messageBuffer[0] << endl;
-		messageBuffer.erase(0, 1);
-	}
+	trimLeadingWhitespace();
 
 	while ((pos = messageBuffer.find("\r\n")) != string::npos)
 	{
-		string completeMessage = messageBuffer.substr(0, pos);
-		cout << BRIGHT_BLUE "[" << __PRETTY_FUNCTION__ << "]" RESET " Found message ending at pos " << pos << ": " << completeMessage << endl;
-
-		// Special debug for server messages
-		if (!completeMessage.empty() && completeMessage[0] == ':') {
-			cout << BRIGHT_BLUE "[" << __PRETTY_FUNCTION__ << "]" RESET " Found server message: " << completeMessage << endl;
-		}
-
+		string completeMessage = extractNextMessage(pos);
 		completeMessages.push_back(completeMessage);
-		messageBuffer.erase(0, pos + 2);
-
-		// Trim again after extracting a message
-		while (!messageBuffer.empty() && (messageBuffer[0] == '\n' || messageBuffer[0] == '\r' || messageBuffer[0] == ' '))
-		{
-			cout << BRIGHT_BLUE "[" << __PRETTY_FUNCTION__ << "]" RESET " Trimming trailing character: " << (int)messageBuffer[0] << endl;
-			messageBuffer.erase(0, 1);
-		}
+		trimLeadingWhitespace();
 	}
 
 	return completeMessages;
+}
+
+void Client::trimLeadingWhitespace()
+{
+	while (!messageBuffer.empty() && isWhitespace(messageBuffer[0]))
+	{
+		cout << BRIGHT_BLUE "[" << __PRETTY_FUNCTION__ << "]" RESET " Trimming leading character: "
+			 << (int)messageBuffer[0] << endl;
+		messageBuffer.erase(0, 1);
+	}
+}
+
+string Client::extractNextMessage(size_t& pos)
+{
+	string completeMessage = messageBuffer.substr(0, pos);
+	cout << BRIGHT_BLUE "[" << __PRETTY_FUNCTION__ << "]" RESET " Found message ending at pos "
+		 << pos << ": " << completeMessage << endl;
+
+	debugPrintServerMessage(completeMessage);
+
+	messageBuffer.erase(0, pos + 2);  // +2 to skip \r\n
+	return completeMessage;
+}
+
+bool Client::isWhitespace(char c) const
+{
+	return (c == '\n' || c == '\r' || c == ' ');
+}
+
+void Client::debugPrintServerMessage(const string& message) const
+{
+	if (!message.empty() && message[0] == ':') {
+		cout << BRIGHT_BLUE "[" << __PRETTY_FUNCTION__ << "]" RESET " Found server message: "
+			 << message << endl;
+	}
 }

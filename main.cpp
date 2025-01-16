@@ -18,7 +18,7 @@ int main(int argc, char* argv[]) {
 	cout << MAGENTA "[" << __PRETTY_FUNCTION__ << "]" RESET " Creating server instance" << endl;
 	Server server(port, password);
 
-	if (server.getSocket() == -1) {  // Add this getter to Server class
+	if (server.getSocket() == -1) {
 		cout << MAGENTA "[" << __PRETTY_FUNCTION__ << "]" RESET " Server failed to initialize" << endl;
 		return 1;
 	}
