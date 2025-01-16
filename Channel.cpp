@@ -4,6 +4,10 @@
 
 Channel::Channel(const string& channelName) : name(channelName)
 {
+	mode["i"] = 0; //invite mode
+	mode["t"] = 0; //topic mode
+	mode["k"] = 0; //channel key
+	mode["l"] = 50; //user limit, 50 by default
 	cout << YELLOW "[" << __PRETTY_FUNCTION__ << "]" RESET " called with name: " << channelName << endl;
 
 }
@@ -18,7 +22,9 @@ void Channel::addClient(Client* client) {
 
 void Channel::removeClient(Client* client) {
 	cout << YELLOW "[" << __PRETTY_FUNCTION__ << "]" RESET " called with client fd: " << client->getFd() << endl;
-
+	if (isOperator(client)) {
+		removeOperator(client);
+	}
 	clients.erase(remove(clients.begin(), clients.end(), client), clients.end());
 }
 
