@@ -30,7 +30,7 @@ void ModeCommandHandler::handle(Client& client, const Message& message) {
 	vector<string> modeArgs;
 	if (message.getParams().size() > 2)
 	{
-		for (i = 2; i < message.getParams().size(); i++) {
+		for (size_t i = 2; i < message.getParams().size(); i++) {
 			modeArgs.push_back(message.getParams()[i]);
 		}
 	}
@@ -48,15 +48,15 @@ void ModeCommandHandler::handle(Client& client, const Message& message) {
 
 }
 
-static void ModeCommandHandler::parseModeCmd(const string& cmd, Channel* channel, Client& client, const Message& message, vector<string>&modeArgs)
+static void parseModeCmd(const string& cmd, Channel* channel, Client& client, const Message& message, vector<string>&modeArgs)
 {
 	int modeflag = 1;
 	for (int i = 0; i < cmd.length(); ++i) {
-		if (cmd[i] == '+') modflag = 1;
-		else if (cmd[i] == '-') modflag = 0;
+		if (cmd[i] == '+') modeflag = 1;
+		else if (cmd[i] == '-') modeflag = 0;
 		//handle individual commands
 		else if (i == 'i' || i == 't') {
-			channel->setMode(cmd[i], modflag);
+			channel->setMode(cmd[i], modeflag);
 		} else if (i == 'k' || i == 'o' || i == 'l') {
 			if (modeflag == 1) {
 					if (modeArgs.size() == 0) {

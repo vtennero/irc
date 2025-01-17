@@ -25,7 +25,7 @@ private:
 	int usersLimit;
 
 public:
-	Channel() : name(""), topic(""), mode("") {}
+	Channel() : name(""), topic("") {}
 	Channel(const string& channelName);
 
 	void addClient(Client* client);
@@ -39,6 +39,7 @@ public:
 	void setTopic(const string& newTopic) { topic = newTopic; }
 	const string& getTopic() const { return topic; }
 	vector<Client*> getClients() const { return clients; }
+	void setMode(string key, int option);
 
 	// Channel management
 	void addOperator(Client* client);
