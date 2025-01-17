@@ -15,6 +15,7 @@
 #include "KickCommandHandler.hpp"
 #include "NamesCommandHandler.hpp"
 #include "TopicCommandHandler.hpp"
+#include "InviteCommandHandler.hpp"
 
 #include <iostream>
 #include <cstring>

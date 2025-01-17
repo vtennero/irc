@@ -29,6 +29,7 @@ public:
 	Channel(const string& channelName);
 
 	void addClient(Client* client);
+	void addInvite(Client* target);
 	void removeClient(Client* client);
 	bool hasClient(const Client* client) const;
 	void broadcastMessage(const string& message, const Client* exclude = NULL);

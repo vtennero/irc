@@ -15,8 +15,10 @@ void TopicCommandHandler::handle(Client& client, const Message& message) {
     //check if client is operator
     //set topic
     //broadcast topic message to channel
-
-
+//check for msg, if no msg, display topic
+    if (message.getParams().size() == 1) {
+        client.send()("Topic of " + message.getParams()[0] + " is " + server.getChannel(message.getParams()[0]->getTopic() + "\r\n"));
+    }
     Channel *channel = server.getChannel(message.getParams()[0]);
 	if (!channel) {
         client.send("403 " + client.getNickname() + " " + message.getParams()[0] + " : Channel doesn't exist\r\n");

@@ -7,7 +7,7 @@ Channel::Channel(const string& channelName) : name(channelName), topic(""), key(
 	mode["i"] = 0; //invite mode
 	mode["t"] = 0; //topic mode
 	mode["k"] = 0; //channel key
-	mode["l"] = 50; //user limit, 50 by default
+	mode["l"] = 0; //user limit, 50 by default
 	cout << YELLOW "[" << __PRETTY_FUNCTION__ << "]" RESET " called with name: " << channelName << endl;
 
 }
@@ -89,4 +89,10 @@ bool Channel::checkMode(const string& mode) const {
 		return it->second;
 	}
 	return false;
+}
+
+void Channel::addInvite(Client* target) {
+	if (find(invited.begin(), invited.end(), target) == invited.end()) {
+		invited.push_back(target);
+	}
 }
