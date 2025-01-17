@@ -70,17 +70,29 @@ void JoinCommandHandler::joinChannel(Client& client, const string& channelName, 
 			return;
 		}
 		channel->addOperator(&client);
+		//mode +k if key is entered
 		if (!key.empty()) {
+			channel->setMode("k", 1);
 			channel->setKey(key);
 		}
-	} else if (!key.empty() && !channel->checkKey(key)) {
-		client.send("475 " + client.getNickname() + " " + channelName + " :Cannot join channel (+k)\r\n");
-		return;
 	}
-
 	if (channel->hasClient(&client))
 		return;
-
+	// Check if key required and is correct
+	if (channel->getMode("k") && (!channel->checkKey(key))) {
+		client.send("475 " + client.getNickname() + " " + channelName + " :Bad channel key (+k)\r\n");
+		return;
+	}
+	// (J)Check if channel user limit reached
+	if (channel->checkMode("l") && channel->getUserCount() >= channel->getUsersLimit()) {
+		client.send("471 " + client.getNickname() + " " + channelName + " :Channel is full (+l)\r\n");
+		return;
+	}
+	//check if user is invited
+	if (channel->checkMode("i") && !channel->isInvited(&client)) {
+		client.send("473 " + client.getNickname() + " " + channelName + " :Channel is invite-only (+i)\r\n");
+		return;
+	}
 	// Add client to channel
 	channel->addClient(&client);
 	sendJoinMessages(client, *channel);

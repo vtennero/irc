@@ -2,7 +2,7 @@
 #include <algorithm>
 #include <iostream>
 
-Channel::Channel(const string& channelName) : name(channelName)
+Channel::Channel(const string& channelName) : name(channelName), topic(""), key("")
 {
 	mode["i"] = 0; //invite mode
 	mode["t"] = 0; //topic mode
@@ -44,6 +44,16 @@ void Channel::broadcastMessage(const string& message, const Client* exclude) {
 	}
 }
 
+void Channel::broadcastMessageOps(const string& message, const Client* exclude) {
+	cout << YELLOW "[" << __PRETTY_FUNCTION__ << "]" RESET " called with message length: " << message.length() << endl;
+
+	for (vector<Client*>::const_iterator it = operators.begin(); it != operators.end(); ++it) {
+		if (*it != exclude) {
+			(*it)->send(message);
+		}
+	}
+}
+
 const string& Channel::getName() const {
 	return name;
 }
@@ -70,3 +80,13 @@ bool Channel::isOperator(const Client* client) const {
 }
 
 size_t Channel::getUserCount() const { return clients.size(); }
+
+void Channel::setInvite(int option) { mode["i"] = option;}
+
+bool Channel::checkMode(const string& mode) const {
+	map<string, int>::const_iterator it = this->mode.find(mode);
+	if (it != this->mode.end()) {
+		return it->second;
+	}
+	return false;
+}
