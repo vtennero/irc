@@ -6,6 +6,7 @@
 
 static void parseModeCmd(const string& cmd, Channel* channel, Client& client, Server* server, vector<string>&modeArgs)
 {
+	cout << "running parseModeCmd" << endl;
 	int modeflag = 1;
 	for (size_t i = 0; i < cmd.length(); ++i) {
 		if (cmd[i] == '+') modeflag = 1;
