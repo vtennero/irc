@@ -20,7 +20,7 @@ private:
 	vector<Client*> operators;
 	vector<Client*> invited;
 	string topic;
-	map<string, int> mode;
+	map<char, int> mode;
 	string key;
 	int usersLimit;
 
@@ -39,7 +39,7 @@ public:
 	void setTopic(const string& newTopic) { topic = newTopic; }
 	const string& getTopic() const { return topic; }
 	vector<Client*> getClients() const { return clients; }
-	void setMode(string key, int option);
+	void setMode(const char key, int option);
 
 	// Channel management
 	void addOperator(Client* client);
@@ -50,8 +50,8 @@ public:
 
 	// List methods
 	size_t getUserCount() const;
-	int getUsersLimit()	const { return usersLimit; }
-	bool checkMode(const string& mode) const;
+	size_t getUsersLimit()	const { return usersLimit; }
+	bool checkMode(const char& mode) const;
 	bool isInvited(const Client* client) const;
 	vector<Client*> getClientList() const;
 	string getClientListString() const;

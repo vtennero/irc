@@ -8,7 +8,11 @@ void TopicCommandHandler::handle(Client& client, const Message& message) {
 		client.send("461 " + client.getNickname() + " TOPIC :Not enough parameters\r\n");
 		return;
 	}
-
+	Channel *channel = server.getChannel(message.getParams()[0]);
+	if (!channel) {
+		client.send("403 " + client.getNickname() + " " + message.getParams()[0] + " : Channel doesn't exist\r\n");
+		return;
+	}
     //check if channel exists
     //check if message exists
     //check if mode is +t
@@ -17,18 +21,13 @@ void TopicCommandHandler::handle(Client& client, const Message& message) {
     //broadcast topic message to channel
 //check for msg, if no msg, display topic
     if (message.getParams().size() == 1) {
-        client.send()("Topic of " + message.getParams()[0] + " is " + server.getChannel(message.getParams()[0]->getTopic() + "\r\n"));
+        client.send("Topic of " + message.getParams()[0] + " is " + channel->getTopic() + "\r\n");
     }
-    Channel *channel = server.getChannel(message.getParams()[0]);
-	if (!channel) {
-        client.send("403 " + client.getNickname() + " " + message.getParams()[0] + " : Channel doesn't exist\r\n");
-        return;
-	}
     if (!channel->hasClient(&client)) {
         client.send("442 " + client.getNickname() + " " + message.getParams()[0] + " : You're not on that channel\r\n");
         return;
     }
-    if (!channel->getMode('t') && (!channel->isOperator(&client))) {
+    if (!channel->checkMode('t') && (!channel->isOperator(&client))) {
         client.send("482 " + client.getNickname() + " " + message.getParams()[0] + " : You're not a channel operator\r\n");
         return;
     }

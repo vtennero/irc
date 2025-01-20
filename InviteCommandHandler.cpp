@@ -26,11 +26,11 @@ void InviteCommandHandler::handle(Client& client, const Message& message) {
         client.send("442 " + client.getNickname() + " " + message.getParams()[0] + " : You're not on that channel\r\n");
         return;
     }
-    if (!channel->getMode('t') && (!channel->isOperator(&client))) {
+    if (!channel->checkMode('t') && (!channel->isOperator(&client))) {
         client.send("482 " + client.getNickname() + " " + message.getParams()[0] + " : You're not a channel operator\r\n");
         return;
     }
-    client* target = server.findClientByNickname(message.getParams()[1]);
+    Client* target = server.findClientByNickname(message.getParams()[1]);
     if (!target) {
         client.send("401 " + client.getNickname() + " " + message.getParams()[1] + " : No such nick\r\n");
         return;
