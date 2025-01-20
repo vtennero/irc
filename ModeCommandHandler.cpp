@@ -7,7 +7,7 @@
 static bool isChannel(const string& channelName) {
 		return !channelName.empty() && channelName[0] == '#';
 }
-
+//Mode doesn't change properly i think.
 static void parseModeCmd(const string& cmd, Channel* channel, Client& client, Server* server, vector<string>&modeArgs)
 {
 	cout << "running parseModeCmd" << endl;
@@ -112,6 +112,7 @@ void ModeCommandHandler::handle(Client& client, const Message& message) {
         if (message.getParams().size() > 2)
         {
                 for (size_t i = 2; i < message.getParams().size(); i++) {
+			cout << "args are: " << message.getParams()[i] << endl;
                         modeArgs.push_back(message.getParams()[i]);
                 }
         }

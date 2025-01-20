@@ -78,6 +78,17 @@ void JoinCommandHandler::joinChannel(Client& client, const string& channelName, 
 	}
 	if (channel->hasClient(&client))
 		return;
+	// Check if channel is +i, if target is on invite list, bypass key
+	if (channel->checkMode('i')) {
+		if (channel->isInvited(&client)) {
+			channel->addClient(&client);
+			sendJoinMessages(client, *channel);
+		} else {
+			client.send("473 " + client.getNickname() + " " + channelName + " :Channel is invite-only (+i)\r\n");
+		}
+		return;
+	}
+				
 	// Check if key required and is correct
 	if (channel->checkMode('k') && (!channel->checkKey(key))) {
 		client.send("475 " + client.getNickname() + " " + channelName + " :Bad channel key (+k)\r\n");
@@ -86,11 +97,6 @@ void JoinCommandHandler::joinChannel(Client& client, const string& channelName, 
 	// (J)Check if channel user limit reached
 	if (channel->checkMode('l') && channel->getUserCount() >= channel->getUsersLimit()) {
 		client.send("471 " + client.getNickname() + " " + channelName + " :Channel is full (+l)\r\n");
-		return;
-	}
-	//check if user is invited
-	if (channel->checkMode('i') && !channel->isInvited(&client)) {
-		client.send("473 " + client.getNickname() + " " + channelName + " :Channel is invite-only (+i)\r\n");
 		return;
 	}
 	// Add client to channel

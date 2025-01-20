@@ -91,6 +91,7 @@ void Channel::setInvite(int option) { mode['i'] = option;}
 bool Channel::checkMode(const char& mode) const {
 	map<char, int>::const_iterator it = this->mode.find(mode);
 	if (it != this->mode.end()) {
+		cout << mode << ": " << it->second << endl;
 		return it->second;
 	}
 	return false;

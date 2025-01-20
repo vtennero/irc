@@ -56,7 +56,10 @@ public:
 	vector<Client*> getClientList() const;
 	string getClientListString() const;
 	void setKey(const string& newKey) { key = newKey; }
-	bool checkKey(const string& attemptedKey) const { return key.empty() || key == attemptedKey; }
+	bool checkKey(const string& attemptedKey) const { 
+		cout << "channel mode: " << checkMode('k') << endl;
+	       cout << "key: " << key << "aKey: " << attemptedKey << endl;
+       	       return key.empty() || key == attemptedKey; }
 
 };
 

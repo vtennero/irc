@@ -28,7 +28,7 @@ void TopicCommandHandler::handle(Client& client, const Message& message) {
         client.send("442 " + client.getNickname() + " " + message.getParams()[0] + " : You're not on that channel\r\n");
         return;
     }
-    if (!channel->checkMode('t') && (!channel->isOperator(&client))) {
+    if (channel->checkMode('t') && (!channel->isOperator(&client))) {
         client.send("482 " + client.getNickname() + " " + message.getParams()[0] + " : You're not a channel operator\r\n");
         return;
     }
