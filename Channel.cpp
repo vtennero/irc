@@ -104,6 +104,7 @@ void Channel::addInvite(Client* target) {
 }
 
 void Channel::setMode(const char key, int option) {
+	cout << "changing mode" << endl;
 	mode[key] = option;
 }
 

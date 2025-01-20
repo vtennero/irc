@@ -10,17 +10,20 @@ static bool isChannel(const string& channelName) {
 //Mode doesn't change properly i think.
 static void parseModeCmd(const string& cmd, Channel* channel, Client& client, Server* server, vector<string>&modeArgs)
 {
-	cout << "running parseModeCmd" << endl;
 	int modeflag = 1;
 	for (size_t i = 0; i < cmd.length(); ++i) {
-		cout << "parsing " << cmd[i] << endl;
-		if (cmd[i] == '+') modeflag = 1;
-		else if (cmd[i] == '-') modeflag = 0;
+		if (cmd[i] == '+') {
+			modeflag = 1;
+		}
+		else if (cmd[i] == '-') {
+			modeflag = 0;
+		}
 		//handle individual commands
-		else if (i == 'i' || i == 't') {
+		else if (cmd[i] == 'i' || cmd[i] == 't') {
 			channel->setMode(cmd[i], modeflag);
-			client.send(":" + client.getNickname() + " MODE " + channel->getName() + " +k " + modeArgs[0] + "\r\n");
-		} else if (i == 'k' || i == 'o' || i == 'l') {
+			client.send(":" + client.getNickname() + " MODE " + channel->getName() + " +" +  cmd[i] + "\r\n");
+		}
+		else if (cmd[i] == 'k' || cmd[i] == 'o' || cmd[i] == 'l') {
 			if (modeflag == 1) {
 					if (modeArgs.size() == 0) {
 						client.send("461 " + client.getNickname() + " MODE :Not enough parameters\r\n");
