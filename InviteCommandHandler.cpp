@@ -16,7 +16,7 @@ void InviteCommandHandler::handle(Client& client, const Message& message) {
     //send DM to target client
     //Add Client to invite list of the channel
 
-
+	//CHANNEL IS ADDED BEHIND USER
     Channel *channel = server.getChannel(message.getParams()[0]);
 	if (!channel) {
         client.send("403 " + client.getNickname() + " " + message.getParams()[0] + " : Channel doesn't exist\r\n");

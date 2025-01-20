@@ -157,6 +157,8 @@ Server::Server(int port, const string& password) : serverSocket(-1), serverPassw
 	commandHandlers["PART"] = new PartCommandHandler(*this);
 	commandHandlers["LIST"] = new ListCommandHandler(*this);
 	commandHandlers["NAMES"] = new NamesCommandHandler(*this);
+	commandHandlers["TOPIC"] = new TopicCommandHandler(*this);
+	commandHandlers["INVITE"] = new TopicCommandHandler(*this);
 
 	cout << "Server listening on port " << port << endl;
 }

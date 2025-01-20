@@ -9,11 +9,13 @@ static void parseModeCmd(const string& cmd, Channel* channel, Client& client, Se
 	cout << "running parseModeCmd" << endl;
 	int modeflag = 1;
 	for (size_t i = 0; i < cmd.length(); ++i) {
+		cout << "parsing " << cmd[i] << endl;
 		if (cmd[i] == '+') modeflag = 1;
 		else if (cmd[i] == '-') modeflag = 0;
 		//handle individual commands
 		else if (i == 'i' || i == 't') {
 			channel->setMode(cmd[i], modeflag);
+			client.send(":" + client.getNickname() + " MODE " + channel->getName() + " +k " + modeArgs[0] + "\r\n");
 		} else if (i == 'k' || i == 'o' || i == 'l') {
 			if (modeflag == 1) {
 					if (modeArgs.size() == 0) {

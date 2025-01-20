@@ -21,6 +21,7 @@ void TopicCommandHandler::handle(Client& client, const Message& message) {
     //broadcast topic message to channel
 //check for msg, if no msg, display topic
     if (message.getParams().size() == 1) {
+	    //channel setter doesn't get to see, why?
         client.send("Topic of " + message.getParams()[0] + " is " + channel->getTopic() + "\r\n");
     }
     if (!channel->hasClient(&client)) {
