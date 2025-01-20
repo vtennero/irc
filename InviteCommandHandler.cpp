@@ -17,27 +17,27 @@ void InviteCommandHandler::handle(Client& client, const Message& message) {
     //Add Client to invite list of the channel
 
 	//CHANNEL IS ADDED BEHIND USER
-    Channel *channel = server.getChannel(message.getParams()[0]);
+    Channel *channel = server.getChannel(message.getParams()[1]);
 	if (!channel) {
-        client.send("403 " + client.getNickname() + " " + message.getParams()[0] + " : Channel doesn't exist\r\n");
+        client.send("403 " + client.getNickname() + " " + message.getParams()[1] + " : Channel doesn't exist\r\n");
         return;
 	}
     if (!channel->hasClient(&client)) {
-        client.send("442 " + client.getNickname() + " " + message.getParams()[0] + " : You're not on that channel\r\n");
+        client.send("442 " + client.getNickname() + " " + message.getParams()[1] + " : You're not on that channel\r\n");
         return;
     }
     if (!channel->checkMode('t') && (!channel->isOperator(&client))) {
-        client.send("482 " + client.getNickname() + " " + message.getParams()[0] + " : You're not a channel operator\r\n");
+        client.send("482 " + client.getNickname() + " " + message.getParams()[1] + " : You're not a channel operator\r\n");
         return;
     }
-    Client* target = server.findClientByNickname(message.getParams()[1]);
+    Client* target = server.findClientByNickname(message.getParams()[0]);
     if (!target) {
-        client.send("401 " + client.getNickname() + " " + message.getParams()[1] + " : No such nick\r\n");
+        client.send("401 " + client.getNickname() + " " + message.getParams()[0] + " : No such nick\r\n");
         return;
     }
     //if target alr in channel, msg client that target alr in channel, else DM target to ask to /join
     if (channel->hasClient(target)) {
-        client.send("443 " + client.getNickname() + " " + message.getParams()[1] + " " + channel->getName() + " : is already on channel\r\n");
+        client.send("443 " + client.getNickname() + " " + message.getParams()[0] + " " + channel->getName() + " : is already on channel\r\n");
         channel->addInvite(target);
     } else {
         target->send(":" + client.getNickname() + " has invited you to join " + channel->getName() + "\r\n");

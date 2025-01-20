@@ -4,6 +4,10 @@
 #include <iostream>
 #include <cstdlib>
 
+static bool isChannel(const string& channelName) {
+		return !channelName.empty() && channelName[0] == '#';
+}
+
 static void parseModeCmd(const string& cmd, Channel* channel, Client& client, Server* server, vector<string>&modeArgs)
 {
 	cout << "running parseModeCmd" << endl;
@@ -81,11 +85,12 @@ static void parseModeCmd(const string& cmd, Channel* channel, Client& client, Se
 
 void ModeCommandHandler::handle(Client& client, const Message& message) {
         // Basic MODE implementation - just acknowledge the mode request
-        if (message.getParams().size() < 2) {
+
+        if (message.getParams().size() < 2 || !isChannel(message.getParams()[0])) {
                 client.send("461 " + client.getNickname() + " MODE :Not enough parameters\r\n");
                 return;
         }
-
+		//there must be a channel passed from client to server, else it means the command isn't entered correctly.
         // For now, just send a generic response for user modes
         /*if (message.getParams()[0] == "*" || message.getParams()[0] == client.getNickname()) {
                 client.send(":" + server.getServerName() + " 221 " + client.getNickname() + " +i\r\n");
