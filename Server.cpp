@@ -30,6 +30,36 @@
 #include <signal.h>
 #include <stdio.h>
 
+// nick db
+bool Server::addAuthNick(const string& nickname, const string& password) {
+    // Check if password is empty or contains non-alphanumeric characters
+    if (password.empty()) {
+        return false;
+    }
+
+    for (string::const_iterator it = password.begin(); it != password.end(); ++it) {
+        if (!isalnum(*it)) {
+            return false;
+        }
+    }
+
+    // Add or update the nickname-password pair
+    authednicks[nickname] = password;
+    return true;
+}
+
+bool Server::isNickAuthed(const string& nickname) const {
+    return authednicks.find(nickname) != authednicks.end();
+}
+
+string Server::getAuthPassword(const string& nickname) const {
+    map<string, string>::const_iterator it = authednicks.find(nickname);
+    if (it != authednicks.end()) {
+        return it->second;
+    }
+    return "";
+}
+
 int Server::getSocket() const { return serverSocket; }
 
 vector<Channel*> Server::getAllChannels() {

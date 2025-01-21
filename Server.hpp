@@ -31,6 +31,7 @@ private:
 	map<string, CommandHandler*> commandHandlers;
 	map<int, Client> clients;
 	map<string, Channel> channels;
+    map<string, string> authednicks;
 
 	void setNonBlocking(int socket);
 	void handleNewConnection();
@@ -71,6 +72,9 @@ public:
 
 	void listAvailableCommands();
 
+    bool addAuthNick(const string& nickname, const string& password);
+    bool isNickAuthed(const string& nickname) const;
+    string getAuthPassword(const string& nickname) const;
 };
 
 #endif
