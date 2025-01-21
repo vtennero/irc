@@ -35,10 +35,25 @@ bool NickCommandHandler::validateNicknameRequest(Client& client, const Message& 
     newNick = message.getParams()[0];
     cout << ORANGE "[" << __PRETTY_FUNCTION__ << "]" RESET " Requested nickname: " << newNick << endl;
 
+    // Check if nickname is "NickServ"
+    if (newNick == "NickServ") {
+        client.send("432 " + newNick + " :Reserved nickname\r\n");
+        return false;
+    }
+
     if (!isValidNickname(newNick)) {
         cout << ORANGE "[" << __PRETTY_FUNCTION__ << "]" RESET " Invalid nickname format" << endl;
         client.send("432 " + newNick + " :Erroneous nickname\r\n");
         return false;
+    }
+
+    // Check if nickname is registered
+    if (server.isNickAuthed(newNick)) {
+        client.setAwaitAuth(true, time(NULL) + 10); // 10 second timeout
+        client.send(":" + server.getServerName() + " NOTICE " + client.getNickname() +
+                   " :This nickname is registered. Please authenticate within 10 seconds using:\r\n");
+        client.send(":" + server.getServerName() + " NOTICE " + client.getNickname() +
+                   " :/msg NickServ identify <password>\r\n");
     }
 
     if (server.isNicknameInUse(newNick)) {
@@ -46,7 +61,7 @@ bool NickCommandHandler::validateNicknameRequest(Client& client, const Message& 
         client.send("433 " + newNick + " :Nickname is already in use\r\n");
         return false;
     }
-// add here is nickauthed
+
     return true;
 }
 

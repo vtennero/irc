@@ -33,6 +33,9 @@ class Client
 		string extractNextMessage(size_t& pos);
 		bool isWhitespace(char c) const;
 		void debugPrintServerMessage(const string& message) const;
+
+		bool awaitAuth;
+		time_t authTimeout;  // Add timeout timestamp
 	public:
 		Client(int fd);
 		Client();
@@ -65,6 +68,11 @@ class Client
 		void sendPing();
 		bool verifyPongToken(const string& token);
 		bool needsPing() const;
+
+		void setAwaitAuth(bool await, time_t timeout = 0);
+		bool isAwaitingAuth() const;
+		time_t getAuthTimeout() const;
+		bool hasAuthTimedOut() const;
 };
 
 #endif

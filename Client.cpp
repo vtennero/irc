@@ -53,6 +53,26 @@ void Client::updateLastPongReceived() {
 	lastPongReceived = time(NULL);
 }
 
+void Client::setAwaitAuth(bool await, time_t timeout) {
+    awaitAuth = await;
+    authTimeout = timeout;
+}
+
+bool Client::isAwaitingAuth() const {
+    return awaitAuth;
+}
+
+time_t Client::getAuthTimeout() const {
+    return authTimeout;
+}
+
+bool Client::hasAuthTimedOut() const {
+    if (!awaitAuth) return false;
+    return time(NULL) > authTimeout;
+}
+
+
+
 Client::Client() : fd(-1), nickname("*"), guestenticated(false), registered(false)
 {
 	cout << BRIGHT_BLUE "[" << __PRETTY_FUNCTION__ << "]" RESET " called" << endl;
@@ -75,7 +95,9 @@ Client::Client(int fd, const string& hostname)
 	  lastPingSent(time(NULL)),
 	  lastPongReceived(time(NULL)),
 	  lastPingToken(""),
-	  awaitingPong(false)
+	  awaitingPong(false),
+		awaitAuth(false),
+      authTimeout(0)
 {
 	cout << BRIGHT_BLUE "[" << __PRETTY_FUNCTION__ << "]" RESET " called with fd: " << fd << ", hostname: " << hostname << endl;
 }

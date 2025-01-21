@@ -60,6 +60,36 @@ string Server::getAuthPassword(const string& nickname) const {
     return "";
 }
 
+
+void Server::checkClientPings() {
+    vector<int> timeoutFds;
+
+    for (map<int, Client>::iterator it = clients.begin(); it != clients.end(); ++it) {
+        // Check ping timeouts
+        if (it->second.isPingTimedOut()) {
+            timeoutFds.push_back(it->first);
+        } else if (it->second.needsPing()) {
+            it->second.sendPing();
+        }
+
+        // Check auth timeouts
+        if (it->second.hasAuthTimedOut()) {
+            cout << GREEN "[" << __PRETTY_FUNCTION__ << "]" RESET
+                 << " Auth timeout for client " << it->first << endl;
+            it->second.setNickname("*");
+            it->second.setAwaitAuth(false);
+            it->second.send(":" + getServerName() + " NOTICE " + it->second.getNickname() +
+                          " :Authentication timeout. Nickname reset.\r\n");
+        }
+    }
+
+    // Remove timed out clients
+    for (vector<int>::iterator it = timeoutFds.begin(); it != timeoutFds.end(); ++it) {
+        removeClient(*it);
+    }
+}
+
+
 int Server::getSocket() const { return serverSocket; }
 
 vector<Channel*> Server::getAllChannels() {
@@ -617,26 +647,26 @@ bool Server::isNicknameInUse(const string& nickname) const
 	return false;
 }
 
-void Server::checkClientPings() {
-	vector<int> timeoutFds; // Store FDs to remove
+// void Server::checkClientPings() {
+// 	vector<int> timeoutFds; // Store FDs to remove
 
-	// First identify clients to remove
-	for (map<int, Client>::iterator it = clients.begin(); it != clients.end(); ++it) {
-		if (it->second.isPingTimedOut()) {
-			cout << GREEN "[" << __PRETTY_FUNCTION__ << "]" RESET " Client " << it->first << " ping timed out, queueing for disconnect" << endl;
+// 	// First identify clients to remove
+// 	for (map<int, Client>::iterator it = clients.begin(); it != clients.end(); ++it) {
+// 		if (it->second.isPingTimedOut()) {
+// 			cout << GREEN "[" << __PRETTY_FUNCTION__ << "]" RESET " Client " << it->first << " ping timed out, queueing for disconnect" << endl;
 
-			timeoutFds.push_back(it->first);
-		} else if (it->second.needsPing()) {
-			cout << GREEN "[" << __PRETTY_FUNCTION__ << "]" RESET " Sending ping to client " << it->first << endl;
+// 			timeoutFds.push_back(it->first);
+// 		} else if (it->second.needsPing()) {
+// 			cout << GREEN "[" << __PRETTY_FUNCTION__ << "]" RESET " Sending ping to client " << it->first << endl;
 
-			it->second.sendPing();
-		}
-	}
+// 			it->second.sendPing();
+// 		}
+// 	}
 
-	// Then remove them separately to avoid iterator invalidation
-	for (vector<int>::iterator it = timeoutFds.begin(); it != timeoutFds.end(); ++it) {
-		cout << GREEN "[" << __PRETTY_FUNCTION__ << "]" RESET " Removing timed out client fd: " << *it << endl;
+// 	// Then remove them separately to avoid iterator invalidation
+// 	for (vector<int>::iterator it = timeoutFds.begin(); it != timeoutFds.end(); ++it) {
+// 		cout << GREEN "[" << __PRETTY_FUNCTION__ << "]" RESET " Removing timed out client fd: " << *it << endl;
 
-		removeClient(*it);
-	}
-}
+// 		removeClient(*it);
+// 	}
+// }
