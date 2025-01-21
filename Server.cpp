@@ -481,9 +481,11 @@ bool Server::authenticateClient(const string& password, int clientFd)
 	}
 	if (password == serverPassword)
 	{
+		cout << "Client authenticated" << endl;
 		clients[clientFd].setAuthenticated(true);
 		return true;
 	}
+	// add error code password mismatch
 	return false;
 }
 
@@ -569,6 +571,7 @@ bool Server::isNicknameInUse(const string& nickname) const
 	for (it = clients.begin(); it != clients.end(); ++it)
 	{
 		if (it->second.getNickname() == nickname)
+		// we will need to update because we are removing client.nickname
 		{
 			return true;
 		}

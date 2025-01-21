@@ -27,7 +27,8 @@ void ListCommandHandler::handle(Client& client, const Message& message) {
 	client.send("323 " + client.getNickname() + " :End of /LIST\r\n");
 }
 
-void ListCommandHandler::sendChannelList(Client& client, const vector<string>& channels) {
+void ListCommandHandler::sendChannelList(Client& client, const vector<string>& channels)
+{
 	vector<Channel*> allChannels = server.getAllChannels();
 
 	for (vector<Channel*>::iterator it = allChannels.begin(); it != allChannels.end(); ++it) {

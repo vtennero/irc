@@ -10,6 +10,12 @@ NickCommandHandler::NickCommandHandler(Server& server) : CommandHandler(server) 
 void NickCommandHandler::handle(Client& client, const Message& message) {
     cout << ORANGE "[" << __PRETTY_FUNCTION__ << "]" RESET " called for client fd: " << client.getFd() << endl;
 
+
+    // to update
+    // 1. check in the db if newnick exists and is connected, no, which we already do
+    // 2. check if authed db, if yes then fetch password, then we ask the user for the password prompt, then we check if its equal to the password we just fetched.
+    // OR we check its in the auth db, we just return true or false, then ask user for the password prompt, then go through the whole db again but we will duplicate erros if duplicate pwd
+
     string newNick;
     if (!validateNicknameRequest(client, message, newNick)) {
         return;
@@ -39,11 +45,12 @@ bool NickCommandHandler::validateNicknameRequest(Client& client, const Message& 
         client.send("433 " + newNick + " :Nickname is already in use\r\n");
         return false;
     }
-
+// add here is nickauthed
     return true;
 }
 
 void NickCommandHandler::handleNicknameChange(Client& client, const string& newNick) {
+
     string oldNick = client.getNickname();
     client.setNickname(newNick);
     cout << ORANGE "[" << __PRETTY_FUNCTION__ << "]" RESET " Nickname changed from '"
