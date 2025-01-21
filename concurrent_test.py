@@ -8,7 +8,7 @@ def stress_client(client_id):
 		s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 		s.connect(('localhost', 6667))
 
-		# Auth
+		# Guest
 		s.send(f"PASS password123\r\n".encode())
 		s.send(f"NICK test{client_id}\r\n".encode())
 		s.send(f"USER test{client_id} 0 * :Test User\r\n".encode())

@@ -21,7 +21,7 @@ class Client
 		string nickname;
 		string username;
 		string realname;
-		bool authenticated;
+		bool guestenticated;
 		bool registered;
 		string messageBuffer;
 		string sendBuffer;
@@ -41,11 +41,11 @@ class Client
 		void setNickname(const string& nick);
 		void setUsername(const string& user);
 		void setRealname(const string& real);
-		void setAuthenticated(bool auth);
+		void setGuestenticated(bool guest);
 		void setRegistered(bool reg);
 		string getNickname() const;
 		string getUsername() const;
-		bool isAuthenticated() const;
+		bool isGuestenticated() const;
 		bool isRegistered() const;
 		bool hasDataToSend() const;
 		void updateLastPongReceived();

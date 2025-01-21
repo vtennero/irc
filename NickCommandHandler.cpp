@@ -15,6 +15,7 @@ void NickCommandHandler::handle(Client& client, const Message& message) {
     // 1. check in the db if newnick exists and is connected, no, which we already do
     // 2. check if authed db, if yes then fetch password, then we ask the user for the password prompt, then we check if its equal to the password we just fetched.
     // OR we check its in the auth db, we just return true or false, then ask user for the password prompt, then go through the whole db again but we will duplicate erros if duplicate pwd
+    // after nick is changed, auth status is lost unless it
 
     string newNick;
     if (!validateNicknameRequest(client, message, newNick)) {
@@ -67,7 +68,7 @@ void NickCommandHandler::sendNickChangeNotification(Client& client, const string
 }
 
 void NickCommandHandler::checkAndHandleRegistration(Client& client) {
-    if (!client.isRegistered() && client.isAuthenticated() && !client.getUsername().empty()) {
+    if (!client.isRegistered() && client.isGuestenticated() && !client.getUsername().empty()) {
         cout << ORANGE "[" << __PRETTY_FUNCTION__ << "]" RESET
              << " Client fully registered, sending welcome message" << endl;
 

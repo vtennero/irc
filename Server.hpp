@@ -27,7 +27,7 @@ private:
 	vector<pollfd> clientFds;
 	static const int MAX_CLIENTS = 100;
 	string serverPassword;
-	vector<bool> clientAuthenticated;
+	vector<bool> clientGuestenticated;
 	map<string, CommandHandler*> commandHandlers;
 	map<int, Client> clients;
 	map<string, Channel> channels;
@@ -35,7 +35,7 @@ private:
 	void setNonBlocking(int socket);
 	void handleNewConnection();
 	void handleClientData(size_t index);
-	bool authenticateClient(const string& password, int clientFd);
+	bool guestenticateClient(const string& password, int clientFd);
     void checkClientPings();  // Add ping check method declaration
 
     static Server* instance;  // Add this static member

@@ -425,14 +425,14 @@ void Server::handleClientData(size_t index)
 					return;
 				}
 				string password = parsedMessage.getParams()[0];
-				if (clients[clientFd].isAuthenticated())
+				if (clients[clientFd].isGuestenticated())
 				{
-					cout << "Client already authenticated" << endl;
-					// Add proper error response for already authenticated
+					cout << "Client already guestenticated" << endl;
+					// Add proper error response for already guestenticated
 					clients[clientFd].send("462 " + clients[clientFd].getNickname() + " :You may not reregister\r\n");
 					return;
 				}
-				if (authenticateClient(password, clientFd))
+				if (guestenticateClient(password, clientFd))
 				{
 					// Success message using client.send
 					clients[clientFd].send("001 " + clients[clientFd].getNickname() + " :Password accepted\r\n");
@@ -446,7 +446,7 @@ void Server::handleClientData(size_t index)
 					clients.erase(clientFd);
 				}
 			}
-			else if (!clients[clientFd].isAuthenticated())
+			else if (!clients[clientFd].isGuestenticated())
 			{
 				// Replace raw send with client.send and proper error code
 				clients[clientFd].send("464 " + clients[clientFd].getNickname() + " :Password required\r\n");
@@ -470,19 +470,19 @@ void Server::handleClientData(size_t index)
 	}
 }
 
-bool Server::authenticateClient(const string& password, int clientFd)
+bool Server::guestenticateClient(const string& password, int clientFd)
 {
 	// cout << "[" << __PRETTY_FUNCTION__ <<"] called" << endl;
 	cout << GREEN "[" << __PRETTY_FUNCTION__ << "]" RESET " called" << endl;
-	if (clients[clientFd].isAuthenticated())
+	if (clients[clientFd].isGuestenticated())
 	{
-		cout << "Client already authenticated" << endl;
+		cout << "Client already guestenticated" << endl;
 		return true;
 	}
 	if (password == serverPassword)
 	{
-		cout << "Client authenticated" << endl;
-		clients[clientFd].setAuthenticated(true);
+		cout << "Client guestenticated" << endl;
+		clients[clientFd].setGuestenticated(true);
 		return true;
 	}
 	// add error code password mismatch

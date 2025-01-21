@@ -21,8 +21,8 @@ void Client::setRealname(const string& real) {
 	realname = real;
 }
 
-void Client::setAuthenticated(bool auth) {
-	authenticated = auth;
+void Client::setGuestenticated(bool guest) {
+	guestenticated = guest;
 }
 
 void Client::setRegistered(bool reg) {
@@ -37,8 +37,8 @@ string Client::getUsername() const {
 	return username;
 }
 
-bool Client::isAuthenticated() const {
-	return authenticated;
+bool Client::isGuestenticated() const {
+	return guestenticated;
 }
 
 bool Client::isRegistered() const {
@@ -53,12 +53,12 @@ void Client::updateLastPongReceived() {
 	lastPongReceived = time(NULL);
 }
 
-Client::Client() : fd(-1), nickname("*"), authenticated(false), registered(false)
+Client::Client() : fd(-1), nickname("*"), guestenticated(false), registered(false)
 {
 	cout << BRIGHT_BLUE "[" << __PRETTY_FUNCTION__ << "]" RESET " called" << endl;
 }
 
-Client::Client(int fd) : fd(fd), nickname("*"), authenticated(false), registered(false)
+Client::Client(int fd) : fd(fd), nickname("*"), guestenticated(false), registered(false)
 {
 	cout << BRIGHT_BLUE "[" << __PRETTY_FUNCTION__ << "]" RESET " called with fd: " << fd << endl;
 }
@@ -68,7 +68,7 @@ Client::Client(int fd, const string& hostname)
 	  hostname(hostname),
 	  nickname("*"),
 	  username(""),
-	  authenticated(false),
+	  guestenticated(false),
 	  registered(false),
 	  messageBuffer(""),
 	  sendBuffer(""),

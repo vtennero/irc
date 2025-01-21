@@ -55,12 +55,12 @@ void UserCommandHandler::processUserInformation(Client& client, const Message& m
 }
 
 void UserCommandHandler::checkAndCompleteRegistration(Client& client) {
-	if (client.isAuthenticated() && !client.getNickname().empty()) {
+	if (client.isGuestenticated() && !client.getNickname().empty()) {
 		cout << "Client fully registered, sending welcome" << endl;
 		client.setRegistered(true);
 		sendWelcomeMessages(client);
 	} else {
-		cout << "Registration incomplete - Auth: " << client.isAuthenticated()
+		cout << "Registration incomplete - Guest: " << client.isGuestenticated()
 				  << ", Nick: " << !client.getNickname().empty() << endl;
 	}
 }
