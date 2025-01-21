@@ -12,7 +12,10 @@
 #include "JoinCommandHandler.hpp"
 #include "PartCommandHandler.hpp"
 #include "ListCommandHandler.hpp"
+#include "KickCommandHandler.hpp"
 #include "NamesCommandHandler.hpp"
+#include "TopicCommandHandler.hpp"
+#include "InviteCommandHandler.hpp"
 
 #include <iostream>
 #include <cstring>
@@ -220,12 +223,17 @@ Server::Server(int port, const string& password) : serverSocket(-1), serverPassw
 	commandHandlers["PRIVMSG"] = new PrivmsgCommandHandler(*this);
 	commandHandlers["MODE"] = new ModeCommandHandler(*this);
 	commandHandlers["WHOIS"] = new WhoisCommandHandler(*this);
+	commandHandlers["KICK"] = new KickCommandHandler(*this);
 	commandHandlers["PING"] = new PingCommandHandler(*this);
 	commandHandlers["PONG"] = new PongCommandHandler(*this);
 	commandHandlers["JOIN"] = new JoinCommandHandler(*this);
 	commandHandlers["PART"] = new PartCommandHandler(*this);
 	commandHandlers["LIST"] = new ListCommandHandler(*this);
 	commandHandlers["NAMES"] = new NamesCommandHandler(*this);
+	commandHandlers["TOPIC"] = new TopicCommandHandler(*this);
+	commandHandlers["INVITE"] = new InviteCommandHandler(*this);
+
+	cout << "Server listening on port " << port << endl;
 
 	setupSignalHandling();
 	cout << GREEN "[" << __PRETTY_FUNCTION__ << "]" RESET "Server listening on port " << port << endl;
