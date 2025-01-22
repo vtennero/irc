@@ -32,6 +32,29 @@
 #define CUSTOM_INET_ADDRSTRLEN 16  // Length of "255.255.255.255" + null terminator
 
 
+// sockets
+struct CustomAddr {
+	unsigned short family;
+	unsigned char data[14];
+};
+
+void setupAddress(struct sockaddr* addr, int port) {
+    CustomAddr* custom = reinterpret_cast<CustomAddr*>(addr);
+    std::memset(custom, 0, sizeof(CustomAddr));  // Zero out the entire structure
+
+    custom->family = AF_INET;
+
+    // Set port in network byte order in first 2 bytes of data
+    unsigned short netPort = htons(port);
+    std::memcpy(&custom->data[0], &netPort, sizeof(netPort));
+
+    // Set address in network byte order in next 4 bytes
+    // INADDR_ANY is already 0 from memset
+    // If you need a specific address, you would set it here like:
+    // unsigned long netAddr = htonl(specificAddr);
+    // std::memcpy(&custom->data[2], &netAddr, sizeof(netAddr));
+}
+
 // Helper function for custom IP to string conversion
 static void byte_to_str(unsigned char byte, char* buffer) {
 	char reverse[4];
@@ -326,6 +349,8 @@ void Server::setNonBlocking(int fd)
 Server::Server(int port, const string& password) : serverSocket(-1), serverPassword(password)
 {
 	cout << GREEN "[" << __PRETTY_FUNCTION__ << "]" RESET " called" << endl;
+
+	// Create socket with allowed parameters
 	serverSocket = socket(AF_INET, SOCK_STREAM, 0);
 	if (serverSocket == -1)
 	{
@@ -333,16 +358,24 @@ Server::Server(int port, const string& password) : serverSocket(-1), serverPassw
 		return;
 	}
 
-	sockaddr_in serverAddr;
-	serverAddr.sin_family = AF_INET;
-	serverAddr.sin_addr.s_addr = INADDR_ANY;
-	serverAddr.sin_port = htons(port);
+	// Enable address reuse
+	int opt = 1;
+	if (setsockopt(serverSocket, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) < 0)
+	{
+		cerr << RED "[" << __PRETTY_FUNCTION__ << "]" RESET " Error setting socket options: " << strerror(errno) << endl;
+		close(serverSocket);
+		serverSocket = -1;
+		return;
+	}
 
-	if (bind(serverSocket, (struct sockaddr*)&serverAddr, sizeof(serverAddr)) == -1)
+	struct sockaddr addr;
+	setupAddress(&addr, port);
+
+	if (bind(serverSocket, &addr, sizeof(addr)) == -1)
 	{
 		cerr << RED "[" << __PRETTY_FUNCTION__ << "]" RESET " Error binding socket: " << strerror(errno) << endl;
 		close(serverSocket);
-		serverSocket = -1;  // Mark as invalid
+		serverSocket = -1;
 		return;
 	}
 
@@ -350,11 +383,12 @@ Server::Server(int port, const string& password) : serverSocket(-1), serverPassw
 	{
 		cerr << RED "[" << __PRETTY_FUNCTION__ << "]" RESET " Error listening on socket: " << strerror(errno) << endl;
 		close(serverSocket);
-		serverSocket = -1;  // Mark as invalid
+		serverSocket = -1;
 		return;
 	}
 
 	setNonBlocking(serverSocket);
+
 
 	commandHandlers["NICK"] = new NickCommandHandler(*this);
 	commandHandlers["USER"] = new UserCommandHandler(*this);
@@ -463,47 +497,48 @@ void Server::run()
 
 void Server::handleNewConnection()
 {
-	cout << GREEN "[" << __PRETTY_FUNCTION__ << "]" RESET " called" << endl;
-	sockaddr_in clientAddr;
-	socklen_t clientAddrLen = sizeof(clientAddr);
+    cout << GREEN "[" << __PRETTY_FUNCTION__ << "]" RESET " called" << endl;
+    struct sockaddr clientAddr;
+    socklen_t clientAddrLen = sizeof(clientAddr);
 
-	int clientSocket = accept(serverSocket, (struct sockaddr*)&clientAddr, &clientAddrLen);
-	if (clientSocket == -1)
-	{
-		 cerr << RED "[" << __PRETTY_FUNCTION__ << "]" RESET "Error accepting client connection: " << strerror(errno) << endl;
-		return;
-	}
-	cout << GREEN "[" << __PRETTY_FUNCTION__ << "]" RESET " Accepted new connection on socket " << clientSocket << endl;
+    int clientSocket = accept(serverSocket, &clientAddr, &clientAddrLen);
+    if (clientSocket == -1)
+    {
+        cerr << RED "[" << __PRETTY_FUNCTION__ << "]" RESET "Error accepting client connection: " << strerror(errno) << endl;
+        return;
+    }
 
-	// Set non-blocking mode
-	setNonBlocking(clientSocket);
+    // Set non-blocking mode
+    setNonBlocking(clientSocket);
 
-	// Set smaller send buffer to help test non-blocking behavior
-	int sndBufSize = 4096; // 4KB send buffer
-	if (setsockopt(clientSocket, SOL_SOCKET, SO_SNDBUF, &sndBufSize, sizeof(sndBufSize)) == -1)
-	{
-		cerr << RED "[" << __PRETTY_FUNCTION__ << "]" RESET "Warning: Could not set send buffer size: " << strerror(errno) << endl;
-	}
+    // Set smaller send buffer
+    int sndBufSize = 4096;
+    if (setsockopt(clientSocket, SOL_SOCKET, SO_SNDBUF, &sndBufSize, sizeof(sndBufSize)) == -1)
+    {
+        cerr << RED "[" << __PRETTY_FUNCTION__ << "]" RESET "Warning: Could not set send buffer size: " << strerror(errno) << endl;
+    }
 
-	char hostBuffer[CUSTOM_INET_ADDRSTRLEN];
-	if (custom_ip_to_str(AF_INET, &(clientAddr.sin_addr), hostBuffer, CUSTOM_INET_ADDRSTRLEN) == NULL)
-	{
-		cerr << RED "[" << __PRETTY_FUNCTION__ << "]" RESET "Error converting client address to string: " << strerror(errno) << endl;
-		close(clientSocket);
-		return;
-	}
+    // Extract IP address from generic sockaddr
+    char hostBuffer[CUSTOM_INET_ADDRSTRLEN];
+    CustomAddr* custom = reinterpret_cast<CustomAddr*>(&clientAddr);
 
-	// Create client and add to poll list
-	clients[clientSocket] = Client(clientSocket, string(hostBuffer));
+    // In our custom structure, the IP address starts after the port (2 bytes into data array)
+    unsigned char* addr_bytes = &custom->data[2];
 
-	pollfd clientPollFd;
-	clientPollFd.fd = clientSocket;
-	clientPollFd.events = POLLIN;
-	clientPollFd.revents = 0;  // Initialize revents to 0
-	clientFds.push_back(clientPollFd);
+    // Convert network byte order address to string
+    snprintf(hostBuffer, CUSTOM_INET_ADDRSTRLEN, "%d.%d.%d.%d",
+             addr_bytes[0], addr_bytes[1], addr_bytes[2], addr_bytes[3]);
 
-	cout << GREEN "[" << __PRETTY_FUNCTION__ << "]" RESET " New client connected: " << hostBuffer << endl;
+    // Create client and add to poll list
+    clients[clientSocket] = Client(clientSocket, string(hostBuffer));
 
+    pollfd clientPollFd;
+    clientPollFd.fd = clientSocket;
+    clientPollFd.events = POLLIN;
+    clientPollFd.revents = 0;
+    clientFds.push_back(clientPollFd);
+
+    cout << GREEN "[" << __PRETTY_FUNCTION__ << "]" RESET " New client connected: " << hostBuffer << endl;
 }
 
 
