@@ -23,6 +23,7 @@ class Client
 		string realname;
 		bool guestenticated;
 		bool registered;
+		bool authenticated;
 		string messageBuffer;
 		string sendBuffer;
 		time_t lastPingSent;
@@ -46,10 +47,12 @@ class Client
 		void setRealname(const string& real);
 		void setGuestenticated(bool guest);
 		void setRegistered(bool reg);
+		void setAuthenticated();
 		string getNickname() const;
 		string getUsername() const;
 		bool isGuestenticated() const;
 		bool isRegistered() const;
+		bool isAuthenticated() const;
 		bool hasDataToSend() const;
 		void updateLastPongReceived();
 

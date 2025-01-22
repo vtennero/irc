@@ -16,6 +16,7 @@
 #include "NamesCommandHandler.hpp"
 #include "TopicCommandHandler.hpp"
 #include "InviteCommandHandler.hpp"
+#include "AuthCommandHandler.hpp"
 
 #include <iostream>
 #include <cstring>

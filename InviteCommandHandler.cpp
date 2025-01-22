@@ -4,13 +4,14 @@
 #include "Channel.hpp"
 
 void InviteCommandHandler::handle(Client& client, const Message& message) {
-	if (message.getParams().size() < 2) {
-		client.send("461 " + client.getNickname() + " TOPIC :Not enough parameters\r\n");
+	if (message.getParams().size() != 2) {
+		client.send("461 " + client.getNickname() + " INVITE :Please use INVITE <username> <#channelname>\r\n");
 		return;
 	}
-
+    //ensure exactly 2 param: user and channel
     //check if channel exists
     //check if message exists
+    //check if client is authenticated
     //check if client is operator
     //check if target client exists
     //send DM to target client
@@ -26,9 +27,19 @@ void InviteCommandHandler::handle(Client& client, const Message& message) {
         client.send("442 " + client.getNickname() + " " + message.getParams()[1] + " : You're not on that channel\r\n");
         return;
     }
-    if (!channel->checkMode('t') && (!channel->isOperator(&client))) {
-        client.send("482 " + client.getNickname() + " " + message.getParams()[1] + " : You're not a channel operator\r\n");
+    /*if (!client.isAuthenticated()) {
+        client.send("451 " + client.getNickname() + " " + message.getParams()[1] + " : You're not authenticated\r\n");
         return;
+    }*/
+    if (!channel->checkMode('t')) {
+        if (!client.isAuthenticated()) {
+			client.send("481 " + client.getNickname() + " " + message.getParams()[0] + " : You're not authenticated\r\n");
+			return;
+		}
+        if (!channel->isOperator(&client)) {
+            client.send("482 " + client.getNickname() + " " + message.getParams()[1] + " : You're not a channel operator\r\n");
+            return;
+        }
     }
     Client* target = server.findClientByNickname(message.getParams()[0]);
     if (!target) {

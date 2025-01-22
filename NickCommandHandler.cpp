@@ -5,7 +5,7 @@
 #include <iostream>
 
 NickCommandHandler::NickCommandHandler(Server& server) : CommandHandler(server) {}
-
+//upon changing nick, set authenticated to false
 
 void NickCommandHandler::handle(Client& client, const Message& message) {
     cout << ORANGE "[" << __PRETTY_FUNCTION__ << "]" RESET " called for client fd: " << client.getFd() << endl;

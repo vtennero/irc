@@ -45,6 +45,14 @@ bool Client::isRegistered() const {
 	return registered;
 }
 
+bool Client::isAuthenticated() const {
+	return authenticated;
+}
+
+void Client::setAuthenticated() {
+	authenticated = true;
+}
+
 bool Client::hasDataToSend() const {
 	return !sendBuffer.empty();
 }
@@ -72,12 +80,13 @@ bool Client::hasAuthTimedOut() const {
 }
 
 
-Client::Client() : fd(-1), nickname("*"), guestenticated(false), registered(false)
+
+Client::Client() : fd(-1), nickname("*"), guestenticated(false), registered(false), authenticated(false)
 {
 	cout << BRIGHT_BLUE "[" << __PRETTY_FUNCTION__ << "]" RESET " called" << endl;
 }
 
-Client::Client(int fd) : fd(fd), nickname("*"), guestenticated(false), registered(false)
+Client::Client(int fd) : fd(fd), nickname("*"), guestenticated(false), registered(false), authenticated(false)
 {
 	cout << BRIGHT_BLUE "[" << __PRETTY_FUNCTION__ << "]" RESET " called with fd: " << fd << endl;
 }
@@ -89,6 +98,7 @@ Client::Client(int fd, const string& hostname)
 	  username(""),
 	  guestenticated(false),
 	  registered(false),
+	  authenticated(false),
 	  messageBuffer(""),
 	  sendBuffer(""),
 	  lastPingSent(time(NULL)),
@@ -112,6 +122,7 @@ string Client::getHostname() const
 	cout << BRIGHT_BLUE "[" << __PRETTY_FUNCTION__ << "]" RESET " called" << endl;
 	return hostname;
 }
+
 
 void hexDump(const char* data, size_t size) {
 	cout << BRIGHT_BLUE "[" << __PRETTY_FUNCTION__ << "]" RESET " Hex dump of message (" << size << " bytes):" << endl;

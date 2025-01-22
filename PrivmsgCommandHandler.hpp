@@ -30,6 +30,7 @@ public:
     virtual void handle(Client& sender, const Message& message);
     void sendPrivateMessage(Client& sender, const std::string& targetNick, const std::string& message);
     void sendChannelMessage(Client& sender, const std::string& channelName, const std::string& message);
+    void runAuth(Client& sender, const string& msg);
 
 private:
     // Validation helpers
