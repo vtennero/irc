@@ -30,6 +30,56 @@
 #include <signal.h>
 #include <stdio.h>
 
+#define CUSTOM_INET_ADDRSTRLEN 16  // Length of "255.255.255.255" + null terminator
+
+
+// Helper function for custom IP to string conversion
+static void byte_to_str(unsigned char byte, char* buffer) {
+	char reverse[4];
+	int idx = 0;
+
+	if (byte == 0) {
+		buffer[0] = '0';
+		buffer[1] = '\0';
+		return;
+	}
+
+	while (byte > 0) {
+		reverse[idx++] = '0' + (byte % 10);
+		byte /= 10;
+	}
+
+	for (int i = 0; i < idx; i++)
+		buffer[i] = reverse[idx - 1 - i];
+	buffer[idx] = '\0';
+}
+
+const char* custom_ip_to_str(int af, const void* src, char* dst, size_t size) {
+	if (af != AF_INET || !src || !dst || size < CUSTOM_INET_ADDRSTRLEN) {
+		return NULL;
+	}
+
+	const unsigned char* addr = static_cast<const unsigned char*>(src);
+	char temp[4];
+	size_t len = 0;
+
+	for (int i = 0; i < 4; i++) {
+		byte_to_str(addr[i], temp);
+		size_t part_len = strlen(temp);
+
+		if (i > 0) {
+			if (len >= size - 1) return NULL;
+			dst[len++] = '.';
+		}
+
+		if (len + part_len >= size) return NULL;
+		strcpy(dst + len, temp);
+		len += part_len;
+	}
+
+	return dst;
+}
+
 // Nickname database
 bool Server::addAuthNick(const string& nickname, const string& password)
 {
@@ -121,12 +171,12 @@ void Server::listAvailableCommands()
 	}
 }
 
-// cleaning
-Server* Server::instance = NULL;  // Changed nullptr to NULL for C++98
+// cleaning and signal handling
+Server* Server::instance = NULL;
 
 void Server::setupSignalHandling()
 {
-	instance = this;  // Now this is valid since method is non-static
+	instance = this;
 	struct sigaction sa;
 	sa.sa_handler = &Server::signalHandler;
 	sa.sa_flags = 0;
@@ -163,14 +213,12 @@ void Server::cleanup()
 	clients.clear();
 	clientFds.clear();
 
-	// Close server socket
 	if (serverSocket != -1)
 	{
 		close(serverSocket);
 		serverSocket = -1;
 	}
 
-	// Delete command handlers
 	for (map<string, CommandHandler*>::iterator it = commandHandlers.begin();
 		 it != commandHandlers.end(); ++it)
 		 {
@@ -178,7 +226,6 @@ void Server::cleanup()
 	}
 	commandHandlers.clear();
 
-	// Clear channels
 	channels.clear();
 
 	cout << GREEN "[" << __PRETTY_FUNCTION__ << "]" RESET " Cleanup complete. Exiting..." << endl;
@@ -440,7 +487,7 @@ void Server::handleNewConnection()
 	}
 
 	char hostBuffer[INET_ADDRSTRLEN];
-	if (inet_ntop(AF_INET, &(clientAddr.sin_addr), hostBuffer, INET_ADDRSTRLEN) == NULL)
+	if (custom_ip_to_str(AF_INET, &(clientAddr.sin_addr), hostBuffer, INET_ADDRSTRLEN) == NULL)
 	{
 		cerr << RED "[" << __PRETTY_FUNCTION__ << "]" RESET "Error converting client address to string: " << strerror(errno) << endl;
 		close(clientSocket);
