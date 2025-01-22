@@ -35,8 +35,7 @@ bool NickCommandHandler::validateNicknameRequest(Client& client, const Message& 
     newNick = message.getParams()[0];
     cout << ORANGE "[" << __PRETTY_FUNCTION__ << "]" RESET " Requested nickname: " << newNick << endl;
 
-    // Check if nickname is "NickServ"
-    if (newNick == "NickServ") {
+    if (newNick == "NickServ" || newNick == "nickserv") {
         client.send("432 " + newNick + " :Reserved nickname\r\n");
         return false;
     }
@@ -47,7 +46,6 @@ bool NickCommandHandler::validateNicknameRequest(Client& client, const Message& 
         return false;
     }
 
-    // Check if nickname is registered
     if (server.isNickAuthed(newNick)) {
         client.setAwaitAuth(true, time(NULL) + 10); // 10 second timeout
         client.send(":" + server.getServerName() + " NOTICE " + client.getNickname() +

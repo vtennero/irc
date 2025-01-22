@@ -72,7 +72,6 @@ bool Client::hasAuthTimedOut() const {
 }
 
 
-
 Client::Client() : fd(-1), nickname("*"), guestenticated(false), registered(false)
 {
 	cout << BRIGHT_BLUE "[" << __PRETTY_FUNCTION__ << "]" RESET " called" << endl;
