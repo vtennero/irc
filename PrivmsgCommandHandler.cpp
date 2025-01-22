@@ -7,7 +7,7 @@
 #include <sstream>
 
 PrivmsgCommandHandler::PrivmsgCommandHandler(Server& server) : CommandHandler(server) {}
-
+//do not allow registration of "*"
 // Validation helpers
 bool PrivmsgCommandHandler::validateMessageParams(const Message& message) {
     if (message.getParams().size() < 2) {
