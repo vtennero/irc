@@ -10,7 +10,14 @@
 #include <unistd.h>
 
 void Client::setNickname(const string& nick) {
-	nickname = nick;
+    string oldNick = nickname;
+    nickname = nick;
+
+    if (oldNick != "*" && oldNick != nick)
+    {
+        // Use proper NICK change format
+        send(":" + oldNick + "!" + username + "@" + hostname + " NICK :" + nick + "\r\n");
+    }
 }
 
 void Client::setUsername(const string& user) {
@@ -51,6 +58,9 @@ bool Client::isAuthenticated() const {
 
 void Client::setAuthenticated() {
 	authenticated = true;
+    awaitAuth = false;
+    authTimeout = 0;
+	send(":" + nickname + " NOTICE " + nickname + " :You are now authenticated\r\n");
 }
 
 bool Client::hasDataToSend() const {

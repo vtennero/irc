@@ -46,6 +46,12 @@ bool NickCommandHandler::validateNicknameRequest(Client& client, const Message& 
         return false;
     }
 
+    if (server.isNicknameInUse(newNick)) {
+        cout << ORANGE "[" << __PRETTY_FUNCTION__ << "]" RESET " Nickname already in use" << endl;
+        client.send("433 " + newNick + " :Nickname is already in use\r\n");
+        return false;
+    }
+
     if (server.isNickAuthed(newNick)) {
         client.setAwaitAuth(true, time(NULL) + 10); // 10 second timeout
         client.send(":" + server.getServerName() + " NOTICE " + client.getNickname() +
@@ -54,11 +60,7 @@ bool NickCommandHandler::validateNicknameRequest(Client& client, const Message& 
                    " :/msg NickServ identify <password>\r\n");
     }
 
-    if (server.isNicknameInUse(newNick)) {
-        cout << ORANGE "[" << __PRETTY_FUNCTION__ << "]" RESET " Nickname already in use" << endl;
-        client.send("433 " + newNick + " :Nickname is already in use\r\n");
-        return false;
-    }
+
 
     return true;
 }
