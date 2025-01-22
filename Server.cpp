@@ -22,7 +22,6 @@
 #include <cerrno>
 #include <sys/socket.h>
 #include <netinet/in.h>
-#include <arpa/inet.h>
 #include <unistd.h>
 #include <fcntl.h>
 #include <sstream>
@@ -486,8 +485,8 @@ void Server::handleNewConnection()
 		cerr << RED "[" << __PRETTY_FUNCTION__ << "]" RESET "Warning: Could not set send buffer size: " << strerror(errno) << endl;
 	}
 
-	char hostBuffer[INET_ADDRSTRLEN];
-	if (custom_ip_to_str(AF_INET, &(clientAddr.sin_addr), hostBuffer, INET_ADDRSTRLEN) == NULL)
+	char hostBuffer[CUSTOM_INET_ADDRSTRLEN];
+	if (custom_ip_to_str(AF_INET, &(clientAddr.sin_addr), hostBuffer, CUSTOM_INET_ADDRSTRLEN) == NULL)
 	{
 		cerr << RED "[" << __PRETTY_FUNCTION__ << "]" RESET "Error converting client address to string: " << strerror(errno) << endl;
 		close(clientSocket);
