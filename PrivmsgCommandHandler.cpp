@@ -4,6 +4,7 @@
 #include "Channel.hpp"
 #include "Message.hpp"
 #include <iostream>
+#include <sstream>
 
 PrivmsgCommandHandler::PrivmsgCommandHandler(Server& server) : CommandHandler(server) {}
 
@@ -68,9 +69,72 @@ string PrivmsgCommandHandler::formatBasicPrivmsg(const Client& sender, const str
            " :" + content;
 }
 
+static string toLowerCase(const string& cmd) {
+    string result = cmd;
+    for (size_t i = 0; i < cmd.size(); ++i) {
+        result[i] = static_cast<char>(std::tolower(result[i]));
+    }
+    return result;
+}
+
+void PrivmsgCommandHandler::runAuth(Client& sender, const string& msg)
+{
+    //need to split cmd by space, and ensure only 2 tokens, else throw error. 1st must be register/auth/identify, 2nd must be password.
+    vector<string> cmd;
+    std::istringstream stream(msg);
+    string word;
+    while (stream >> word) {
+        cmd.push_back(word);
+    }
+    if (cmd.size() != 2) {
+        //sender.send("461 " + sender.getNickname() + " " + "REGISTER/IDENTIFY" + " :Wrong no. of parameters: <REGISTER/IDENTIFY> <password>\r\n");
+    }
+    if (toLowerCase(cmd[0]) == "register") {
+        //check if nick is already registered
+        if (server.isNickAuthed(sender.getNickname())) {
+            sender.send("462 " + sender.getNickname() + " " + "REGISTER" + " :Nickname is already registered, run /msg nickserv identify <password> instead\r\n");
+        } else {
+            if (!server.addAuthNick(sender.getNickname(), cmd[1])) {
+                sender.send("464 " + sender.getNickname() + " " + "REGISTER" + " :Failure in registering nickname, please try another nickname or password.\r\n");
+            } else {
+                sender.send(sender.getNickname() + " " + "REGISTER" + " Success! Please run /msg nickserv identify <password>\r\n");
+            }
+        }
+        return;
+        //if not registered, add to db w password
+        //give success message
+        //prompt to run auth command
+    }
+    if (toLowerCase(cmd[0]) == "identify" || toLowerCase(cmd[0]) == "auth") {
+        if (!server.isNickAuthed(sender.getNickname())) {
+            sender.send("432 " + sender.getNickname() + " " + "IDENTIFY" + " :The nickname is not registered yet, please try /msg nickserv register <password instead\r\n");
+            return;
+        } else {
+            if (server.getAuthPassword(sender.getNickname()) != cmd[1]) {
+                sender.send("464 " + sender.getNickname() + " " + "IDENTIFY" + " :Password incorrect.\r\n");
+                return;
+            } else {
+                cout << "is user authenticated? " << sender.isAuthenticated() << endl;
+                sender.setAuthenticated();
+                cout << "is user authenticated? " << sender.isAuthenticated() << endl;
+            }
+        }
+        //check if nick is already registered
+        //if not registered, ask to run register command
+        //if registered, obtain key to match
+        //give success message, change bool to authenticated
+    }
+}
+
 // Main handlers
 void PrivmsgCommandHandler::handle(Client& sender, const Message& message) {
     if (!validateMessageParams(message)) {
+        return;
+    }
+    cout << "printing [0] onwards " << message.getParams()[0] << " 1: " << message.getParams()[1] << endl;
+    if (toLowerCase(message.getParams()[0]) == "nickserv") {
+        cout << "running auth command" << endl;
+        runAuth(sender, message.getParams()[1]);
         return;
     }
 

@@ -1,9 +1,9 @@
-#include "KickCommandHandler.hpp"
+#include "AuthCommandHandler.hpp"
 #include "Server.hpp"
 #include "Message.hpp"
 #include "Channel.hpp"
 
-void KickCommandHandler::handle(Client& client, const Message& message) {
+void AuthCommandHandler::handle(Client& client, const Message& message) {
 	if (message.getParams().empty()) {
 		client.send("461 " + client.getNickname() + " KICK :Not enough parameters\r\n");
 		return;
@@ -27,12 +27,6 @@ void KickCommandHandler::handle(Client& client, const Message& message) {
         client.send("442 " + client.getNickname() + " " + message.getParams()[0] + " : You're not on that channel\r\n");
         return;
     }
-    
-    if (!client.isAuthenticated()) {
-		client.send("481 " + client.getNickname() + " " + message.getParams()[0] + " : You're not authenticated\r\n");
-		return;
-	}
-
     if (!channel->isOperator(&client)) {
         client.send("482 " + client.getNickname() + " " + message.getParams()[0] + " : You're not a channel operator\r\n");
         return;

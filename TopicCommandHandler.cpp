@@ -2,7 +2,9 @@
 #include "Server.hpp"
 #include "Message.hpp"
 #include "Channel.hpp"
+#include <sstream>
 
+//[0] must be channel, [1] onwards all considered as topic string
 void TopicCommandHandler::handle(Client& client, const Message& message) {
 	if (message.getParams().empty()) {
 		client.send("461 " + client.getNickname() + " TOPIC :Not enough parameters\r\n");
@@ -13,25 +15,40 @@ void TopicCommandHandler::handle(Client& client, const Message& message) {
 		client.send("403 " + client.getNickname() + " " + message.getParams()[0] + " : Channel doesn't exist\r\n");
 		return;
 	}
-    //check if channel exists
-    //check if message exists
-    //check if mode is +t
-    //check if client is operator
     //set topic
     //broadcast topic message to channel
-//check for msg, if no msg, display topic
-    if (message.getParams().size() == 1) {
-	    //channel setter doesn't get to see, why?
-        client.send("Topic of " + message.getParams()[0] + " is " + channel->getTopic() + "\r\n");
-    }
+//check for msg, if no msg, DM topic to client
+    //check if client on channel
     if (!channel->hasClient(&client)) {
         client.send("442 " + client.getNickname() + " " + message.getParams()[0] + " : You're not on that channel\r\n");
         return;
+        //check if any args, display topic in DM if non
     }
-    if (channel->checkMode('t') && (!channel->isOperator(&client))) {
-        client.send("482 " + client.getNickname() + " " + message.getParams()[0] + " : You're not a channel operator\r\n");
+    if (message.getParams().size() == 1) {
+        client.send("Topic of " + message.getParams()[0] + " is " + channel->getTopic() + "\r\n");
         return;
     }
-    channel->setTopic(message.getParams()[1]);
-	channel->broadcastMessage(":" + client.getNickname() + " TOPIC " + channel->getName() + " :" + message.getParams()[1] + "\r\n", &client);
+    //check if client is operator if channel mode is +t
+    if (channel->checkMode('t')) {
+        if (!client.isAuthenticated()) {
+			client.send("481 " + client.getNickname() + " " + message.getParams()[0] + " : You're not authenticated\r\n");
+			return;
+		}
+        if (!channel->isOperator(&client)) {
+            client.send("482 " + client.getNickname() + " " + message.getParams()[0] + " : You're not a channel operator\r\n");
+            return;
+        }
+    }
+    //combine all remaining args into a single string
+    std::ostringstream newTopic;
+    const vector<string>& params = message.getParams();
+
+    for (size_t i = 1; i < params.size(); ++i) {
+        newTopic << params[i];
+        if (i != params.size() - 1) {
+            newTopic << " ";
+        }
+    }
+    channel->setTopic(newTopic.str());
+	channel->broadcastMessage(":" + client.getNickname() + " TOPIC " + channel->getName() + " :" + newTopic.str() + "\r\n", &client);
 }
