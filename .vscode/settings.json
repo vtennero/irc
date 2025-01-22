@@ -5,6 +5,8 @@
 		"ostream": "cpp",
 		"new": "cpp",
 		"string": "cpp",
-		"iosfwd": "cpp"
+		"iosfwd": "cpp",
+		"__locale": "cpp",
+		"string_view": "cpp"
 	}
 }
