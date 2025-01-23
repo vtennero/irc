@@ -53,9 +53,11 @@ public:
 	size_t getUsersLimit()	const;
 	bool checkMode(const char& mode) const;
 	bool isInvited(const Client* client) const;
-	vector<Client*> getClientList() const;
+	map<char, int> getMode() const;
+	//vector<Client*> getClientList() const;
 	string getClientListString() const;
 	void setKey(const string& newKey);
+	string getKey() const;
 	bool checkKey(const string& attemptedKey) const;
 
 };

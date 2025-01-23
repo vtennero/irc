@@ -89,6 +89,9 @@ void PrivmsgCommandHandler::runAuth(Client& sender, const string& msg)
     if (cmd.size() != 2) {
         //sender.send("461 " + sender.getNickname() + " " + "REGISTER/IDENTIFY" + " :Wrong no. of parameters: <REGISTER/IDENTIFY> <password>\r\n");
     }
+    if (sender.getNickname() == "*") {
+        sender.send("432 " + sender.getNickname() + " " + "REGISTER/IDENTIFY" + " :Not allowed to register/identify this nickname\r\n");
+    }
     if (toLowerCase(cmd[0]) == "register") {
         //check if nick is already registered
         if (server.isNickAuthed(sender.getNickname())) {

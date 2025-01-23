@@ -16,6 +16,7 @@
 #include "NamesCommandHandler.hpp"
 #include "TopicCommandHandler.hpp"
 #include "InviteCommandHandler.hpp"
+#include "WhoCommandHandler.hpp"
 
 #include <iostream>
 #include <cstring>
@@ -405,6 +406,7 @@ Server::Server(int port, const string& password) : serverSocket(-1), serverPassw
 	commandHandlers["NAMES"] = new NamesCommandHandler(*this);
 	commandHandlers["TOPIC"] = new TopicCommandHandler(*this);
 	commandHandlers["INVITE"] = new InviteCommandHandler(*this);
+	commandHandlers["WHO"] = new WhoCommandHandler(*this);
 
 	cout << "Server listening on port " << port << endl;
 

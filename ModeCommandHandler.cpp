@@ -3,6 +3,7 @@
 #include "Client.hpp"
 #include <iostream>
 #include <cstdlib>
+#include <sstream>
 
 ModeCommandHandler::ModeCommandHandler(Server& server) : CommandHandler(server) {}
 //CHECK FOR AUTHENTICATION
@@ -111,109 +112,42 @@ static void parseModeCmd(const string& cmd, Channel* channel, Client& client, Se
         }
     }
 }
-//Skip all channels, then handle all modes, then match args
-/*static void parseModeCmd(const string& cmd, Channel* channel, Client& client, Server* server, vector<string>&modeArgs)
-{
-	int modeflag = 1;
-	//go through options
-//	for (size_t j = 0; j < modeOps.size(); ++j) {
-//		string cmd = modeOps[j];
-		cout << cmd << endl;
-		for (size_t i = 0; i < cmd.length(); ++i) {
-			if (cmd[i] == '+') {
-				modeflag = 1;
-			}
-			else if (cmd[i] == '-') {
-				modeflag = 0;
-			}
-			//handle individual commands
-			else if (cmd[i] == 'i' || cmd[i] == 't') {
-				channel->setMode(cmd[i], modeflag);
-				client.send(":" + client.getNickname() + " MODE " + channel->getName() + " +" +  cmd[i] + "\r\n");
-			}
-			else if (cmd[i] == 'k' || cmd[i] == 'o' || cmd[i] == 'l') {
-				if (modeflag == 1) {
-					if (modeArgs.size() == 0) {
-						client.send("461 " + client.getNickname() + " MODE :Not enough parameters\r\n");
-						break;
-					}
-				}
-				switch (cmd[i]) {
-					case 'k':
-						if (modeflag == 1) {
-							channel->setMode(cmd[i], modeflag);
-							channel->setKey(modeArgs[0]);
-							client.send(":" + client.getNickname() + " MODE " + channel->getName() + " +k " + modeArgs[0] + "\r\n");
-							channel->broadcastMessageOps(":" + client.getNickname() + " has set " + channel->getName() + " key to " + modeArgs[0] + "\r\n", &client);
-							modeArgs.erase(modeArgs.begin());
-						}
-						else {
-							channel->setMode(cmd[i], modeflag);
-							channel->setKey("");
-							client.send(":" + client.getNickname() + " MODE " + channel->getName() + " -k\r\n");
-							channel->broadcastMessageOps(":" + client.getNickname() + " has removed " + channel->getName() + " key\r\n", &client);
-						}
-						break;
-					case 'o':
-						if (!channel->hasClient(server->findClientByNickname(modeArgs[0]))) {
-								client.send("441 " + client.getNickname() + " " + channel->getName() + " " + modeArgs[0] + " :They aren't on that channel\r\n");
-						} else if (modeflag == 1) {
-								channel->addOperator(server->findClientByNickname(modeArgs[0]));
-								client.send(":" + client.getNickname() + " MODE " + channel->getName() + " +o " + modeArgs[0] + "\r\n");
-								channel->broadcastMessageOps(":" + client.getNickname() + " MODE " + channel->getName() + " +o " + modeArgs[0] + "\r\n", &client);
-						} else {
-								channel->removeOperator(server->findClientByNickname(modeArgs[0]));
-								client.send(":" + client.getNickname() + " MODE " + channel->getName() + " -o " + modeArgs[0] + "\r\n");
-								channel->broadcastMessageOps(":" + client.getNickname() + " has removed operator access to " + channel->getName() + " from " + modeArgs[0] + "\r\n", &client);
-						}
-						modeArgs.erase(modeArgs.begin());
-						break;
-					case 'l':
-						if (modeflag == 1) {
-							int limit = atoi(modeArgs[0].c_str());
-							if (!limit) {
-								client.send("502 " + client.getNickname() + " " + channel->getName() + " :Cannot change limit to that value\r\n");
-							} else {
-								channel->setMode(cmd[i], modeflag);
-								channel->setUsersLimit(limit);
-								client.send(":" + client.getNickname() + " MODE " + channel->getName() + " +l " + modeArgs[0] + "\r\n");
-								channel->broadcastMessageOps(":" + client.getNickname() + " has set user limit for " + channel->getName() + " to " + modeArgs[0] + "\r\n", &client);
-							}
-							modeArgs.erase(modeArgs.begin());
-						} else {
-							channel->setMode(cmd[i], modeflag);
-							channel->setUsersLimit(-1);
-							client.send(":" + client.getNickname() + " MODE " + channel->getName() + " -l\r\n");
-							channel->broadcastMessageOps(":" + client.getNickname() + " has removed user limit for " + channel->getName() + "\r\n", &client);
-						}
-						break;
-					default:
-						break;
-				}
-			}
-//		}
-	}
-}*/
 
-/*static size_t findMode(const Message& message) {
-	//find mode operations immediately after channels, throw error if none
-	for (size_t i = 1; i < message.getParams().size(); ++i) {
-		if (message.getParams()[i][0] == '#') continue;
-		if (message.getParams()[i][0] == '+' || message.getParams()[i][0] == '-') {
-			return i;
-		} else {
-			return 0;
-		}
-	}
-	return 0;
-}*/
+static void showModes(Client& client, Channel* channel) {
+    map<char, int> modes = channel->getMode();
+    
+    std::stringstream ss;
+    std::stringstream ss2;
+
+    ss << ":" << channel->getName() << " +";
+
+    std::map<char, int>::iterator it;
+    
+    for (it = modes.begin(); it != modes.end(); ++it) {
+        if (it->second == 1) {
+            ss << it->first;
+            if (it->first == 'l') {
+                ss2 << " User limit: " << channel->getUsersLimit();
+            } 
+            else if (it->first == 'k') {
+                ss2 << " Secret key: " << channel->getKey();
+            }
+        }
+    }
+    client.send(ss.str() + ss2.str() + "\r\n");
+}
+    
 
 void ModeCommandHandler::handle(Client& client, const Message& message) {
         // skips initial mode commands by irssi
 		if (message.getParams()[0] == "*" || server.findClientByNickname(message.getParams()[0]) != NULL) {
 			return;
 		}
-        if (message.getParams().size() < 2 || !isChannel(message.getParams()[0])) {
+        if (message.getParams().size() == 1 && isChannel(message.getParams()[0])) {
+            showModes(client, server.getChannel(message.getParams()[0]));
+            return;
+        }
+        if (message.getParams().size() < 2 && !isChannel(message.getParams()[0])) {
                 client.send("461 " + client.getNickname() + " MODE :Not enough parameters\r\n");
                 return;
         }

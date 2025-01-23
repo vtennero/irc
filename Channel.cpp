@@ -130,6 +130,10 @@ bool Channel::checkMode(const char& mode) const {
 	return false;
 }
 
+string Channel::getKey() const {
+	return key;
+}
+
 void Channel::addInvite(Client* target) {
 	if (find(invited.begin(), invited.end(), target) == invited.end()) {
 		invited.push_back(target);
@@ -151,4 +155,8 @@ void Channel::setUsersLimit(int limit) {
 
 void Channel::setKey(const string& newKey) {
 	key = newKey;
+}
+
+map<char, int> Channel::getMode() const {
+	return mode;
 }
