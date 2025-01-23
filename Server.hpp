@@ -36,7 +36,6 @@ private:
 	void setNonBlocking(int socket);
 	void handleNewConnection();
 	void handleClientData(size_t index);
-	bool guestenticateClient(const string& password, int clientFd);
     void checkClientPings();  // Add ping check method declaration
 
     static Server* instance;  // Add this static member
@@ -75,6 +74,7 @@ public:
     bool addAuthNick(const string& nickname, const string& password);
     bool isNickAuthed(const string& nickname) const;
     string getAuthPassword(const string& nickname) const;
+	bool guestenticateClient(const string& password, int clientFd);
 };
 
 #endif

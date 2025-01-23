@@ -161,32 +161,24 @@ void hexDump(const char* data, size_t size)
 	printf("\n");
 }
 
-void Client::tryFlushSendBuffer()
-{
-	while (!sendBuffer.empty())
-	{
-		ssize_t sent = ::send(fd, sendBuffer.c_str(), sendBuffer.length(), MSG_DONTWAIT);
+void Client::tryFlushSendBuffer() {
+    while (!sendBuffer.empty()) {
+        ssize_t sent = ::send(fd, sendBuffer.c_str(), sendBuffer.length(), MSG_DONTWAIT);
 
-		if (sent > 0)
-		{
-			cout << BRIGHT_BLUE "[" << __PRETTY_FUNCTION__ << "]" RESET " Sent " << sent << "/" << sendBuffer.length() << " bytes to fd " << fd << endl;
-			sendBuffer.erase(0, sent);
-		}
-		else if (sent == -1)
-		{
-			if (errno == EAGAIN || errno == EWOULDBLOCK)
-			{
-				cout << BRIGHT_BLUE "[" << __PRETTY_FUNCTION__ << "]" RESET " Socket buffer full for fd " << fd << ", " << sendBuffer.length() << " bytes pending" << endl;
-				return;
-			}
-			else
-			{
-				cerr << RED "[" << __PRETTY_FUNCTION__ << "]" RESET " Error sending to fd " << fd << ": " << strerror(errno) << endl;
-				sendBuffer.clear();
-				return;
-			}
-		}
-	}
+        if (sent > 0) {
+            cout << GREEN "[" << __PRETTY_FUNCTION__ << "]" RESET " Sent " << sent << "/" << sendBuffer.length() << " bytes to fd " << fd << endl;
+            sendBuffer.erase(0, sent);
+        } else if (sent == -1) {
+            if (errno == EAGAIN || errno == EWOULDBLOCK) {
+                cout << GREEN "[" << __PRETTY_FUNCTION__ << "]" RESET " Socket buffer full for fd " << fd << ", " << sendBuffer.length() << " bytes pending" << endl;
+                return;
+            } else {
+                // Connection error - throw exception to be caught by caller
+                throw std::runtime_error(std::string("Send error: ") + strerror(errno));
+                sendBuffer.clear(); // Clear buffer on error
+            }
+        }
+    }
 }
 
 void Client::send(const string& message)

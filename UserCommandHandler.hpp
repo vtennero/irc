@@ -21,6 +21,7 @@ class UserCommandHandler : public CommandHandler
 		bool validateMessageParameters(Client& client, const Message& message);
 		void processUserInformation(Client& client, const Message& message);
 		void checkAndCompleteRegistration(Client& client);
+		string numberToString(size_t number);
 
 		void sendWelcomeMessage(Client& client, const string& nickname, const string& username, const string& hostname);
 		void sendHostInfo(Client& client, const string& nickname);
