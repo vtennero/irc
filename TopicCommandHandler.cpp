@@ -29,15 +29,9 @@ void TopicCommandHandler::handle(Client& client, const Message& message) {
         return;
     }
     //check if client is operator if channel mode is +t
-    if (channel->checkMode('t')) {
-        if (!client.isAuthenticated()) {
-			client.send("481 " + client.getNickname() + " " + message.getParams()[0] + " : You're not authenticated\r\n");
-			return;
-		}
-        if (!channel->isOperator(&client)) {
-            client.send("482 " + client.getNickname() + " " + message.getParams()[0] + " : You're not a channel operator\r\n");
-            return;
-        }
+    if (channel->checkMode('t') && (!client.isAuthenticated() || !channel->isOperator(&client))) {
+        client.send("482 " + client.getNickname() + " " + message.getParams()[0] + " : You're not a channel operator\r\n");
+        return;
     }
     //combine all remaining args into a single string
     std::ostringstream newTopic;
@@ -50,5 +44,5 @@ void TopicCommandHandler::handle(Client& client, const Message& message) {
         }
     }
     channel->setTopic(newTopic.str());
-	channel->broadcastMessage(":" + client.getNickname() + " TOPIC " + channel->getName() + " :" + newTopic.str() + "\r\n", &client);
+	channel->broadcastMessage(":" + client.getNickname() + " TOPIC " + channel->getName() + " :" + newTopic.str() + "\r\n", NULL);
 }
