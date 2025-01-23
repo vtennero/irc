@@ -36,7 +36,7 @@ public:
 	void broadcastMessageOps(const string& message, const Client* exclude = NULL);
 
 	const string& getName() const;
-	void setTopic(const string& newTopic) { topic = newTopic; }
+	void setTopic(const string& newTopic);
 	const string& getTopic() const { return topic; }
 	vector<Client*> getClients() const { return clients; }
 	void setMode(const char key, int option);

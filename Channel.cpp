@@ -34,12 +34,23 @@ bool Channel::hasClient(const Client* client) const {
 
 void Channel::broadcastMessage(const string& message, const Client* exclude) {
 	cout << YELLOW "[" << __PRETTY_FUNCTION__ << "]" RESET " called with message length: " << message.length() << endl;
-
+	/*if (clients.empty()) {
+		return;
+	}*/
 	for (vector<Client*>::const_iterator it = clients.begin(); it != clients.end(); ++it) {
-		if (*it != exclude) {
+		if (exclude && *it == exclude)
+    		continue;
+		/*if (*it != exclude) {
 			(*it)->send(message);
-		}
+		}*/
+		(*it)->send(message);
 	}
+}
+
+void Channel::setTopic(const string& newTopic) {
+	cout << "Setting new topic: " << newTopic << endl;
+	topic = newTopic; 
+	cout << "Topic is now: " << topic << endl;
 }
 
 void Channel::broadcastMessageOps(const string& message, const Client* exclude) {
