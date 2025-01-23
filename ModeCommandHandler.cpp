@@ -10,7 +10,7 @@ static bool isChannel(const string& channelName) {
 		return !channelName.empty() && channelName[0] == '#';
 }
 
-static void handleSimpleMode(char mode, bool modeflag, Channel* channel, Client& client) {
+static void handleItMode(char mode, bool modeflag, Channel* channel, Client& client) {
     channel->setMode(mode, modeflag);
     client.send(":" + client.getNickname() + " MODE " + channel->getName() + " " + (modeflag ? "+" : "-") + mode + "\r\n");
 }
@@ -30,31 +30,31 @@ static void handleKeyMode(bool modeflag, const string& key, Channel* channel, Cl
 static void handleOperatorMode(bool modeflag, const string& targetNick, Channel* channel, Client& client, Server* server) {
     Client* targetClient = server->findClientByNickname(targetNick);
     if (!targetClient) {
-        client.send("441 " + client.getNickname() + " " + channel->getName() + " " + targetNick + " :They aren't on that channel\r\n");
+        client.send("441 " + client.getNickname() + " " + channel->getName() + " " + targetNick + " :No such client on this channel.\r\n");
         return;
     }
 
     if (modeflag == 1) {
         channel->addOperator(targetClient);
         client.send(":" + client.getNickname() + " MODE " + channel->getName() + " +o " + targetNick + "\r\n");
-        channel->broadcastMessageOps(":" + client.getNickname() + " MODE " + channel->getName() + " +o " + targetNick + "\r\n", &client);
+        channel->broadcastMessage(":" + client.getNickname() + " MODE " + channel->getName() + " +o " + targetNick + "\r\n", &client);
     } else {
         channel->removeOperator(targetClient);
         client.send(":" + client.getNickname() + " MODE " + channel->getName() + " -o " + targetNick + "\r\n");
-        channel->broadcastMessageOps(":" + client.getNickname() + " has removed operator access to " + channel->getName() + " from " + targetNick + "\r\n", &client);
+        channel->broadcastMessage(":" + client.getNickname() + " has removed operator access to " + channel->getName() + " from " + targetNick + "\r\n", &client);
     }
 }
 
 static void handleLimitMode(bool modeflag, const string& limitStr, Channel* channel, Client& client) {
     int limit = atoi(limitStr.c_str());
-    if (modeflag == 1 && limit <= 0) {
+    if (modeflag == 1 && (limit <= 0 || limit > 50)) {
         client.send("502 " + client.getNickname() + " " + channel->getName() + " :Cannot change limit to that value\r\n");
     } else if (modeflag == 1) {
         channel->setUsersLimit(limit);
         client.send(":" + client.getNickname() + " MODE " + channel->getName() + " +l " + limitStr + "\r\n");
         channel->broadcastMessageOps(":" + client.getNickname() + " has set user limit for " + channel->getName() + " to " + limitStr + "\r\n", &client);
     } else {
-        channel->setUsersLimit(-1);
+        channel->setUsersLimit(50);
         client.send(":" + client.getNickname() + " MODE " + channel->getName() + " -l\r\n");
         channel->broadcastMessageOps(":" + client.getNickname() + " has removed user limit for " + channel->getName() + "\r\n", &client);
     }
@@ -73,15 +73,17 @@ static void parseModeCmd(const string& cmd, Channel* channel, Client& client, Se
             switch (mode) {
                 case 'i':
                 case 't':
-                    handleSimpleMode(mode, modeflag, channel, client);
+                    handleItMode(mode, modeflag, channel, client);
                     break;
                 case 'k':
-                    if (modeArgs.empty()) {
+                    if (modeflag && modeArgs.empty()) {
                         client.send("461 " + client.getNickname() + " MODE :Not enough parameters\r\n");
                         return;
                     }
-                    handleKeyMode(modeflag, modeArgs[0], channel, client);
-                    modeArgs.erase(modeArgs.begin());
+                    handleKeyMode(modeflag, modeflag ? modeArgs[0] : "", channel, client);
+                    if (modeflag) {
+                        modeArgs.erase(modeArgs.begin());
+                    }
                     break;
                 case 'o':
                     if (modeArgs.empty()) {
@@ -92,15 +94,18 @@ static void parseModeCmd(const string& cmd, Channel* channel, Client& client, Se
                     modeArgs.erase(modeArgs.begin());
                     break;
                 case 'l':
-                    if (modeArgs.empty()) {
+                    if (modeflag && modeArgs.empty()) {
                         client.send("461 " + client.getNickname() + " MODE :Not enough parameters\r\n");
                         return;
                     }
-                    handleLimitMode(modeflag, modeArgs[0], channel, client);
-                    modeArgs.erase(modeArgs.begin());
+                    handleLimitMode(modeflag, modeflag ? modeArgs[0] : "", channel, client);
+                    if (modeflag) {
+                        modeArgs.erase(modeArgs.begin());
+                    }
                     break;
                 default:
                     // Ignore invalid modes or throw an error
+                    client.send("472 " + client.getNickname() + " MODE :Unknown mode\r\n");
                     break;
             }
         }
