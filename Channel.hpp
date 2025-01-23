@@ -37,29 +37,26 @@ public:
 
 	const string& getName() const;
 	void setTopic(const string& newTopic);
-	const string& getTopic() const { return topic; }
-	vector<Client*> getClients() const { return clients; }
+	const string& getTopic() const;
+	vector<Client*> getClients() const;
 	void setMode(const char key, int option);
 
 	// Channel management
 	void addOperator(Client* client);
 	void removeOperator(Client* client);
-	void setUsersLimit(int limit) { usersLimit = limit; };
+	void setUsersLimit(int limit);
 	bool isOperator(const Client* client) const;
 	void setInvite(int option);
 
 	// List methods
 	size_t getUserCount() const;
-	size_t getUsersLimit()	const { return usersLimit; }
+	size_t getUsersLimit()	const;
 	bool checkMode(const char& mode) const;
 	bool isInvited(const Client* client) const;
 	vector<Client*> getClientList() const;
 	string getClientListString() const;
-	void setKey(const string& newKey) { key = newKey; }
-	bool checkKey(const string& attemptedKey) const {
-		cout << "channel mode: " << checkMode('k') << endl;
-	       cout << "key: " << key << "aKey: " << attemptedKey << endl;
-       	       return key.empty() || key == attemptedKey; }
+	void setKey(const string& newKey);
+	bool checkKey(const string& attemptedKey) const;
 
 };
 

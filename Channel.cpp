@@ -6,7 +6,8 @@ Channel::Channel(const string& channelName) : name(channelName), topic(""), key(
 	mode['i'] = 0; //invite mode
 	mode['t'] = 0; //topic mode
 	mode['k'] = 0; //channel key
-	mode['l'] = 0; //user limit, 50 by default
+	mode['l'] = 0; //user limit
+	usersLimit = -1;
 	cout << YELLOW "[" << __PRETTY_FUNCTION__ << "]" RESET " called with name: " << channelName << endl;
 }
 
@@ -63,6 +64,10 @@ void Channel::broadcastMessageOps(const string& message, const Client* exclude) 
 	}
 }
 
+size_t Channel::getUsersLimit()	const {
+	return usersLimit;
+}
+
 const string& Channel::getName() const {
 	return name;
 }
@@ -79,6 +84,9 @@ void Channel::removeOperator(Client* client) {
 			}
 }
 
+vector<Client*> Channel::getClients() const {
+	return clients;
+}
 
 string Channel::getClientListString() const {
 	string list;
@@ -91,13 +99,27 @@ string Channel::getClientListString() const {
 	return list;
 }
 
+const string& Channel::getTopic() const {
+	return topic;
+}
+
 bool Channel::isOperator(const Client* client) const {
 	return find(operators.begin(), operators.end(), client) != operators.end();
 }
 
-size_t Channel::getUserCount() const { return clients.size(); }
+size_t Channel::getUserCount() const {
+	return clients.size();
+}
 
-void Channel::setInvite(int option) { mode['i'] = option;}
+
+
+void Channel::setInvite(int option) {
+	mode['i'] = option;
+}
+
+bool Channel::checkKey(const string& attemptedKey) const {
+	return (key.empty() || key == attemptedKey);
+}
 
 bool Channel::checkMode(const char& mode) const {
 	map<char, int>::const_iterator it = this->mode.find(mode);
@@ -121,4 +143,12 @@ void Channel::setMode(const char key, int option) {
 
 bool Channel::isInvited(Client const* client) const {
 	return find(invited.begin(), invited.end(), client) != invited.end();
+}
+
+void Channel::setUsersLimit(int limit) { 
+	usersLimit = limit;
+}
+
+void Channel::setKey(const string& newKey) {
+	key = newKey;
 }
