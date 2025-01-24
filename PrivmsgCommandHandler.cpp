@@ -116,9 +116,9 @@ void PrivmsgCommandHandler::runAuth(Client& sender, const string& msg)
 				sender.send("464 " + sender.getNickname() + " " + "IDENTIFY" + " :Password incorrect.\r\n");
 				return;
 			} else {
-				cout << "is user authenticated? " << sender.isAuthenticated() << endl;
+				cout << ORANGE "[" << __PRETTY_FUNCTION__ << "]" RESET "is user authenticated? " << sender.isAuthenticated() << endl;
 				sender.setAuthenticated();
-				cout << "is user authenticated? " << sender.isAuthenticated() << endl;
+				cout << ORANGE "[" << __PRETTY_FUNCTION__ << "]" RESET "is user authenticated? " << sender.isAuthenticated() << endl;
 			}
 		}
 		//check if nick is already registered

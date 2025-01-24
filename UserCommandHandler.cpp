@@ -58,16 +58,16 @@ void UserCommandHandler::processUserInformation(Client& client, const Message& m
 	if (message.getParams().size() >= 4) {
 		client.setRealname(message.getParams()[3]);
 	}
-	cout << "Client set username to: " << client.getUsername() << endl;
+	cout << ORANGE "[" << __PRETTY_FUNCTION__ << "]" RESET  << "Client set username to: " << client.getUsername() << endl;
 }
 
 void UserCommandHandler::checkAndCompleteRegistration(Client& client) {
 	if (client.isGuestenticated() && !client.getNickname().empty()) {
-		cout << "Client fully registered, sending welcome" << endl;
+		cout << ORANGE "[" << __PRETTY_FUNCTION__ << "]" RESET  << "Client fully registered, sending welcome" << endl;
 		client.setRegistered(true);
 		sendWelcomeMessages(client);
 	} else {
-		cout << "Registration incomplete - Guest: " << client.isGuestenticated()
+		cout << RED "[" << __PRETTY_FUNCTION__ << "]" RESET  << "Registration incomplete - Guest: " << client.isGuestenticated()
 				  << ", Nick: " << !client.getNickname().empty() << endl;
 	}
 }

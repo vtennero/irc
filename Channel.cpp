@@ -49,9 +49,9 @@ void Channel::broadcastMessage(const string& message, const Client* exclude) {
 }
 
 void Channel::setTopic(const string& newTopic) {
-	cout << "Setting new topic: " << newTopic << endl;
-	topic = newTopic; 
-	cout << "Topic is now: " << topic << endl;
+	cout << YELLOW "[" << __PRETTY_FUNCTION__ << "]" RESET "Setting new topic: " << newTopic << endl;
+	topic = newTopic;
+	cout << YELLOW "[" << __PRETTY_FUNCTION__ << "]" RESET  "Topic is now: " << topic << endl;
 }
 
 void Channel::broadcastMessageOps(const string& message, const Client* exclude) {
@@ -124,7 +124,7 @@ bool Channel::checkKey(const string& attemptedKey) const {
 bool Channel::checkMode(const char& mode) const {
 	map<char, int>::const_iterator it = this->mode.find(mode);
 	if (it != this->mode.end()) {
-		cout << mode << ": " << it->second << endl;
+		cout << YELLOW "[" << __PRETTY_FUNCTION__ << "]" RESET << mode << ": " << it->second << endl;
 		return it->second;
 	}
 	return false;
@@ -141,7 +141,7 @@ void Channel::addInvite(Client* target) {
 }
 
 void Channel::setMode(const char key, int option) {
-	cout << "changing mode" << endl;
+	cout << YELLOW "[" << __PRETTY_FUNCTION__ << "]" RESET "changing mode" << endl;
 	mode[key] = option;
 }
 
@@ -149,7 +149,7 @@ bool Channel::isInvited(Client const* client) const {
 	return find(invited.begin(), invited.end(), client) != invited.end();
 }
 
-void Channel::setUsersLimit(int limit) { 
+void Channel::setUsersLimit(int limit) {
 	usersLimit = limit;
 }
 

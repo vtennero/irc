@@ -33,7 +33,8 @@ def run_message_tests():
         responses.extend(tester.send_message("PRIV", sock))
 
         # Test split commands
-        responses.extend(tester.send_message("PRIVMSG\n#channel", sock))
+        # responses.extend(tester.send_message("PRIVMSG\n#channel", sock))
+        responses.extend(tester.send_message("PRIVMSG\n#channel :hello world", sock))
 
         sock.close()
         return responses

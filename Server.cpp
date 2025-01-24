@@ -41,20 +41,20 @@ struct CustomAddr {
 };
 
 void setupAddress(struct sockaddr* addr, int port) {
-    CustomAddr* custom = reinterpret_cast<CustomAddr*>(addr);
-    std::memset(custom, 0, sizeof(CustomAddr));  // Zero out the entire structure
+	CustomAddr* custom = reinterpret_cast<CustomAddr*>(addr);
+	std::memset(custom, 0, sizeof(CustomAddr));  // Zero out the entire structure
 
-    custom->family = AF_INET;
+	custom->family = AF_INET;
 
-    // Set port in network byte order in first 2 bytes of data
-    unsigned short netPort = htons(port);
-    std::memcpy(&custom->data[0], &netPort, sizeof(netPort));
+	// Set port in network byte order in first 2 bytes of data
+	unsigned short netPort = htons(port);
+	std::memcpy(&custom->data[0], &netPort, sizeof(netPort));
 
-    // Set address in network byte order in next 4 bytes
-    // INADDR_ANY is already 0 from memset
-    // If you need a specific address, you would set it here like:
-    // unsigned long netAddr = htonl(specificAddr);
-    // std::memcpy(&custom->data[2], &netAddr, sizeof(netAddr));
+	// Set address in network byte order in next 4 bytes
+	// INADDR_ANY is already 0 from memset
+	// If you need a specific address, you would set it here like:
+	// unsigned long netAddr = htonl(specificAddr);
+	// std::memcpy(&custom->data[2], &netAddr, sizeof(netAddr));
 }
 
 // Helper function for custom IP to string conversion
@@ -284,7 +284,7 @@ Client* Server::findClientByNickname(const string& nickname)
 
 	for (map<int, Client>::iterator it = clients.begin(); it != clients.end(); ++it)
 	{
-		cout << "  FD: " << it->first
+		cout << GREEN "[" << __PRETTY_FUNCTION__ << "]" RESET  "  FD: " << it->first
 				  << " Nick: " << it->second.getNickname()
 				  << " Registered: " << (it->second.isRegistered() ? "Yes" : "No")
 				  << endl;
@@ -410,8 +410,6 @@ Server::Server(int port, const string& password) : serverSocket(-1), serverPassw
 	commandHandlers["WHO"] = new WhoCommandHandler(*this);
 	commandHandlers["PASS"] = new PassCommandHandler(*this);
 
-	cout << "Server listening on port " << port << endl;
-
 	setupSignalHandling();
 	cout << GREEN "[" << __PRETTY_FUNCTION__ << "]" RESET "Server listening on port " << port << endl;
 }
@@ -438,266 +436,198 @@ Server::~Server()
 
 
 void Server::run() {
-    cout << GREEN "[" << __PRETTY_FUNCTION__ << "]" RESET " called" << endl;
+	cout << GREEN "[" << __PRETTY_FUNCTION__ << "]" RESET " called" << endl;
 
-    pollfd serverPollFd;
-    serverPollFd.fd = serverSocket;
-    serverPollFd.events = POLLIN;
-    serverPollFd.revents = 0;
-    clientFds.push_back(serverPollFd);
+	pollfd serverPollFd;
+	serverPollFd.fd = serverSocket;
+	serverPollFd.events = POLLIN;
+	serverPollFd.revents = 0;
+	clientFds.push_back(serverPollFd);
 
-    while (true) {
-        checkClientPings();  // Keep ping checks
+	while (true) {
+		checkClientPings();  // Keep ping checks
 
-        // Update poll events for clients with pending data
-        for (size_t i = 1; i < clientFds.size(); ++i) {
-            Client& client = clients[clientFds[i].fd];
-            clientFds[i].events = POLLIN;
-            if (client.hasDataToSend()) {
-                clientFds[i].events |= POLLOUT;
-            }
-        }
+		// Update poll events for clients with pending data
+		for (size_t i = 1; i < clientFds.size(); ++i) {
+			Client& client = clients[clientFds[i].fd];
+			clientFds[i].events = POLLIN;
+			if (client.hasDataToSend()) {
+				clientFds[i].events |= POLLOUT;
+			}
+		}
 
-        int pollResult = poll(&clientFds[0], clientFds.size(), 1000);
-        if (pollResult == -1) {
-            if (errno == EINTR) continue;  // Handle interrupt
-            cerr << RED "[" << __PRETTY_FUNCTION__ << "]" RESET " Error in poll: " << strerror(errno) << endl;
-            break;
-        }
+		int pollResult = poll(&clientFds[0], clientFds.size(), 1000);
+		if (pollResult == -1) {
+			if (errno == EINTR) continue;  // Handle interrupt
+			cerr << RED "[" << __PRETTY_FUNCTION__ << "]" RESET " Error in poll: " << strerror(errno) << endl;
+			break;
+		}
 
-        for (size_t i = 0; i < clientFds.size(); ++i) {
-            if (clientFds[i].revents & (POLLHUP | POLLERR)) {
-                if (clientFds[i].fd != serverSocket) {
-                    removeClient(clientFds[i].fd);
-                    continue;
-                }
-            }
+		for (size_t i = 0; i < clientFds.size(); ++i) {
+			if (clientFds[i].revents & (POLLHUP | POLLERR)) {
+				if (clientFds[i].fd != serverSocket) {
+					removeClient(clientFds[i].fd);
+					continue;
+				}
+			}
 
-            if (clientFds[i].revents & POLLIN) {
-                if (clientFds[i].fd == serverSocket) {
-                    handleNewConnection();
-                } else {
-                    handleClientData(i);
-                }
-            }
+			if (clientFds[i].revents & POLLIN) {
+				if (clientFds[i].fd == serverSocket) {
+					handleNewConnection();
+				} else {
+					handleClientData(i);
+				}
+			}
 
-            if (clientFds[i].revents & POLLOUT) {
-                try {
-                    clients[clientFds[i].fd].tryFlushSendBuffer();
-                } catch (const std::exception& e) {
-                    cout << RED "[" << __PRETTY_FUNCTION__ << "]" RESET " Send error, removing client: " << e.what() << endl;
-                    removeClient(clientFds[i].fd);
-                }
-            }
-        }
-    }
+			if (clientFds[i].revents & POLLOUT) {
+				try {
+					clients[clientFds[i].fd].tryFlushSendBuffer();
+				} catch (const std::exception& e) {
+					cout << RED "[" << __PRETTY_FUNCTION__ << "]" RESET " Send error, removing client: " << e.what() << endl;
+					removeClient(clientFds[i].fd);
+				}
+			}
+		}
+	}
 }
 
 void Server::handleNewConnection()
 {
-    cout << GREEN "[" << __PRETTY_FUNCTION__ << "]" RESET " called" << endl;
-    struct sockaddr clientAddr;
-    socklen_t clientAddrLen = sizeof(clientAddr);
+	cout << GREEN "[" << __PRETTY_FUNCTION__ << "]" RESET " called" << endl;
+	struct sockaddr clientAddr;
+	socklen_t clientAddrLen = sizeof(clientAddr);
 
-    int clientSocket = accept(serverSocket, &clientAddr, &clientAddrLen);
-    if (clientSocket == -1)
-    {
-        cerr << RED "[" << __PRETTY_FUNCTION__ << "]" RESET "Error accepting client connection: " << strerror(errno) << endl;
-        return;
-    }
+	int clientSocket = accept(serverSocket, &clientAddr, &clientAddrLen);
+	if (clientSocket == -1)
+	{
+		cerr << RED "[" << __PRETTY_FUNCTION__ << "]" RESET "Error accepting client connection: " << strerror(errno) << endl;
+		return;
+	}
 
-    // Set non-blocking mode
-    setNonBlocking(clientSocket);
+	// Set non-blocking mode
+	setNonBlocking(clientSocket);
 
-    // Set smaller send buffer
-    int sndBufSize = 4096;
-    if (setsockopt(clientSocket, SOL_SOCKET, SO_SNDBUF, &sndBufSize, sizeof(sndBufSize)) == -1)
-    {
-        cerr << RED "[" << __PRETTY_FUNCTION__ << "]" RESET "Warning: Could not set send buffer size: " << strerror(errno) << endl;
-    }
+	// Set smaller send buffer
+	int sndBufSize = 4096;
+	if (setsockopt(clientSocket, SOL_SOCKET, SO_SNDBUF, &sndBufSize, sizeof(sndBufSize)) == -1)
+	{
+		cerr << RED "[" << __PRETTY_FUNCTION__ << "]" RESET "Warning: Could not set send buffer size: " << strerror(errno) << endl;
+	}
 
-    // Extract IP address from generic sockaddr
-    char hostBuffer[CUSTOM_INET_ADDRSTRLEN];
-    CustomAddr* custom = reinterpret_cast<CustomAddr*>(&clientAddr);
+	// Extract IP address from generic sockaddr
+	char hostBuffer[CUSTOM_INET_ADDRSTRLEN];
+	CustomAddr* custom = reinterpret_cast<CustomAddr*>(&clientAddr);
 
-    // In our custom structure, the IP address starts after the port (2 bytes into data array)
-    unsigned char* addr_bytes = &custom->data[2];
+	// In our custom structure, the IP address starts after the port (2 bytes into data array)
+	unsigned char* addr_bytes = &custom->data[2];
 
-    // Convert network byte order address to string
-    snprintf(hostBuffer, CUSTOM_INET_ADDRSTRLEN, "%d.%d.%d.%d",
-             addr_bytes[0], addr_bytes[1], addr_bytes[2], addr_bytes[3]);
+	// Convert network byte order address to string
+	snprintf(hostBuffer, CUSTOM_INET_ADDRSTRLEN, "%d.%d.%d.%d",
+			 addr_bytes[0], addr_bytes[1], addr_bytes[2], addr_bytes[3]);
 
-    // Create client and add to poll list
-    clients[clientSocket] = Client(clientSocket, string(hostBuffer));
+	// Create client and add to poll list
+	clients[clientSocket] = Client(clientSocket, string(hostBuffer));
 
-    pollfd clientPollFd;
-    clientPollFd.fd = clientSocket;
-    clientPollFd.events = POLLIN;
-    clientPollFd.revents = 0;
-    clientFds.push_back(clientPollFd);
+	pollfd clientPollFd;
+	clientPollFd.fd = clientSocket;
+	clientPollFd.events = POLLIN;
+	clientPollFd.revents = 0;
+	clientFds.push_back(clientPollFd);
 
-    cout << GREEN "[" << __PRETTY_FUNCTION__ << "]" RESET " New client connected: " << hostBuffer << endl;
+	cout << GREEN "[" << __PRETTY_FUNCTION__ << "]" RESET " New client connected: " << hostBuffer << endl;
 }
 void Server::handleClientData(size_t index) {
-    cout << GREEN "[" << __PRETTY_FUNCTION__ << "]" RESET " called for client fd: " << clientFds[index].fd << endl;
-    char buffer[1024];
-    int clientFd = clientFds[index].fd;
+	cout << GREEN "[" << __PRETTY_FUNCTION__ << "]" RESET " called for client fd: " << clientFds[index].fd << endl;
+	char buffer[1024];
+	int clientFd = clientFds[index].fd;
 
-    try {
-        int bytesRead = recv(clientFds[index].fd, buffer, sizeof(buffer), 0);
+	try {
+		int bytesRead = recv(clientFds[index].fd, buffer, sizeof(buffer), 0);
 
-        if (bytesRead <= 0) {
-            if (bytesRead == 0) {
-                cout << GREEN "[" << __PRETTY_FUNCTION__ << "]" RESET " Client disconnected normally" << endl;
-            } else {
-                cerr << RED "[" << __PRETTY_FUNCTION__ << "]" RESET " Error reading from client: " << strerror(errno) << endl;
-            }
-            removeClient(clientFd);
-            return;
-        }
+		if (bytesRead <= 0) {
+			if (bytesRead == 0) {
+				cout << GREEN "[" << __PRETTY_FUNCTION__ << "]" RESET " Client disconnected normally" << endl;
+			} else {
+				cerr << RED "[" << __PRETTY_FUNCTION__ << "]" RESET " Error reading from client: " << strerror(errno) << endl;
+			}
+			removeClient(clientFd);
+			return;
+		}
 
-        // Process received data
-        map<int, Client>::iterator clientIt = clients.find(clientFd);
-        if (clientIt == clients.end()) {
-            return;
-        }
+		// clients.find(clientFd) searches in the clients map for a client using their socket file descriptor (clientFd) as the key. return exits the function if client not found, preventing operations on invalid clients
+		map<int, Client>::iterator clientIt = clients.find(clientFd);
+		if (clientIt == clients.end()) {
+			return;
+		}
 
-        clientIt->second.appendToBuffer(string(buffer, bytesRead));
-        vector<string> completeMessages = clientIt->second.getCompleteMessages();
+		clientIt->second.appendToBuffer(string(buffer, bytesRead));
+		vector<string> completeMessages = clientIt->second.getCompleteMessages();
 
-        for (size_t i = 0; i < completeMessages.size(); ++i) {
-            try {
-                Message parsedMessage(completeMessages[i]);
+		for (size_t i = 0; i < completeMessages.size(); ++i) {
+			try {
+				Message parsedMessage(completeMessages[i]);
 
-                // Only allow PASS, PING and QUIT before authentication
-                if (!clientIt->second.isGuestenticated() &&
-                    parsedMessage.getCommand() != "PASS" &&
-                    parsedMessage.getCommand() != "PING" &&
-                    parsedMessage.getCommand() != "QUIT") {
-                    clientIt->second.send("464 * :Password required\r\n");
-                    continue;
-                }
+				if (!clientIt->second.isGuestenticated() &&
+					parsedMessage.getCommand() != "PASS" &&
+					parsedMessage.getCommand() != "PING" &&
+					parsedMessage.getCommand() != "QUIT") {
+					clientIt->second.send("464 * :Password required\r\n");
+					continue;
+				}
 
-                // Handle commands through appropriate handlers
-                map<string, CommandHandler*>::iterator handler = commandHandlers.find(parsedMessage.getCommand());
-                if (handler != commandHandlers.end()) {
-                    handler->second->handle(clientIt->second, parsedMessage);
-                }
+				// Handle commands through appropriate handlers. one command handler map to rule them all
+				map<string, CommandHandler*>::iterator handler = commandHandlers.find(parsedMessage.getCommand());
+				if (handler != commandHandlers.end()) {
+					handler->second->handle(clientIt->second, parsedMessage);
+				}
 
-            } catch (const std::exception& e) {
-                cerr << RED "[" << __PRETTY_FUNCTION__ << "]" RESET " Error processing message: " << e.what() << endl;
-                continue;
-            }
-        }
-    } catch (const std::exception& e) {
-        cerr << RED "[" << __PRETTY_FUNCTION__ << "]" RESET " Error handling client data: " << e.what() << endl;
-        removeClient(clientFd);
-    }
+			} catch (const std::exception& e) {
+				cerr << RED "[" << __PRETTY_FUNCTION__ << "]" RESET " Error processing message: " << e.what() << endl;
+				continue;
+			}
+		}
+	} catch (const std::exception& e) {
+		cerr << RED "[" << __PRETTY_FUNCTION__ << "]" RESET " Error handling client data: " << e.what() << endl;
+		removeClient(clientFd);
+	}
 }
 
-// void Server::handleClientData(size_t index) {
-//     cout << GREEN "[" << __PRETTY_FUNCTION__ << "]" RESET " called for client fd: " << clientFds[index].fd << endl;
-//     char buffer[1024];
-//     int clientFd = clientFds[index].fd;
-
-//     try {
-//         int bytesRead = recv(clientFds[index].fd, buffer, sizeof(buffer), 0);
-
-//         if (bytesRead <= 0) {
-//             if (bytesRead == 0) {
-//                 cout << GREEN "[" << __PRETTY_FUNCTION__ << "]" RESET " Client disconnected normally" << endl;
-//             } else {
-//                 cerr << RED "[" << __PRETTY_FUNCTION__ << "]" RESET " Error reading from client: " << strerror(errno) << endl;
-//             }
-//             removeClient(clientFd);
-//             return;
-//         }
-
-//         // Process received data
-//         map<int, Client>::iterator clientIt = clients.find(clientFd);
-//         if (clientIt == clients.end()) {
-//             return;
-//         }
-
-//         clientIt->second.appendToBuffer(string(buffer, bytesRead));
-//         vector<string> completeMessages = clientIt->second.getCompleteMessages();
-
-//         for (size_t i = 0; i < completeMessages.size(); ++i) {
-//             try {
-//                 Message parsedMessage(completeMessages[i]);
-//                 if (parsedMessage.getCommand() == "PING") {
-//                     // Immediately respond to PING
-//                     string pongReply = "PONG :" + parsedMessage.getParams()[0] + "\r\n";
-//                     clientIt->second.send(pongReply);
-//                     continue;
-//                 }
-
-//                 if (parsedMessage.getCommand() == "PASS") {
-//                     // Handle password authentication directly
-//                     if (guestenticateClient(parsedMessage.getParams()[0], clientFd)) {
-//                         clientIt->second.send(":" + getServerName() + " NOTICE * :Password accepted\r\n");
-//                     } else {
-//                         clientIt->second.send("464 * :Password incorrect\r\n");
-//                         // removeClient(clientFd);
-//                         return;
-//                     }
-//                     continue;
-//                 }
-
-//                 // Only process other commands if client is authenticated
-//                 if (!clientIt->second.isGuestenticated() && parsedMessage.getCommand() != "QUIT") {
-//                     clientIt->second.send("464 * :Password required\r\n");
-//                     continue;
-//                 }
-
-//                 map<string, CommandHandler*>::iterator handler = commandHandlers.find(parsedMessage.getCommand());
-//                 if (handler != commandHandlers.end()) {
-//                     handler->second->handle(clientIt->second, parsedMessage);
-//                 }
-//             } catch (const std::exception& e) {
-//                 cerr << RED "[" << __PRETTY_FUNCTION__ << "]" RESET " Error processing message: " << e.what() << endl;
-//                 continue;
-//             }
-//         }
-//     } catch (const std::exception& e) {
-//         cerr << RED "[" << __PRETTY_FUNCTION__ << "]" RESET " Error handling client data: " << e.what() << endl;
-//         removeClient(clientFd);
-//     }
-// }
-
 bool Server::guestenticateClient(const string& password, int clientFd) {
-    cout << GREEN "[" << __PRETTY_FUNCTION__ << "]" RESET " called" << endl;
+	cout << GREEN "[" << __PRETTY_FUNCTION__ << "]" RESET " called" << endl;
 
-    // Validate input
-    if (password.empty()) {
-        cout << RED "[" << __PRETTY_FUNCTION__ << "]" RESET " Empty password" << endl;
-        return false;
-    }
+	// Validate input
+	if (password.empty()) {
+		cout << RED "[" << __PRETTY_FUNCTION__ << "]" RESET " Empty password" << endl;
+		return false;
+	}
 
-    // Find client
-    map<int, Client>::iterator it = clients.find(clientFd);
-    if (it == clients.end()) {
-        cout << RED "[" << __PRETTY_FUNCTION__ << "]" RESET " Client not found" << endl;
-        return false;
-    }
+	// Find client
+	// clients is a map where:
+	// - Key (first) is an integer (the client's file descriptor)
+	// - Value (second) is a Client object
+	map<int, Client>::iterator it = clients.find(clientFd);
+	if (it == clients.end()) {
+		cout << RED "[" << __PRETTY_FUNCTION__ << "]" RESET " Client not found" << endl;
+		return false;
+	}
 
-    Client& client = it->second;
+	Client& client = it->second;
 
-    // Prevent re-authentication
-    if (client.isGuestenticated()) {
-        cout << YELLOW "[" << __PRETTY_FUNCTION__ << "]" RESET " Client already authenticated" << endl;
-        return true;
-    }
+	// Prevent re-authentication
+	if (client.isGuestenticated()) {
+		cout << YELLOW "[" << __PRETTY_FUNCTION__ << "]" RESET " Client already authenticated" << endl;
+		return true;
+	}
 
-    // Validate password
-    if (password == serverPassword) {
-        cout << GREEN "[" << __PRETTY_FUNCTION__ << "]" RESET " Password accepted" << endl;
-        client.setGuestenticated(true);
-        return true;
-    }
+	// Validate password
+	if (password == serverPassword) {
+		cout << GREEN "[" << __PRETTY_FUNCTION__ << "]" RESET " Password accepted" << endl;
+		client.setGuestenticated(true);
+		return true;
+	}
 
-    cout << RED "[" << __PRETTY_FUNCTION__ << "]" RESET " Password rejected" << endl;
-    return false;
+	cout << RED "[" << __PRETTY_FUNCTION__ << "]" RESET " Password rejected" << endl;
+	return false;
 }
 
 string Server::getServerName()
@@ -786,7 +716,6 @@ bool Server::isNicknameInUse(const string& nickname) const
 	for (it = clients.begin(); it != clients.end(); ++it)
 	{
 		if (it->second.getNickname() == nickname)
-		// we will need to update because we are removing client.nickname
 		{
 			return true;
 		}

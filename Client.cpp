@@ -251,15 +251,16 @@ void Client::appendToBuffer(const string& data)
 {
 	cout << BRIGHT_BLUE "[" << __PRETTY_FUNCTION__ << "]" RESET " called with data length: " << data.length() << endl;
 	// cout << BRIGHT_BLUE "[" << __PRETTY_FUNCTION__ << "]" RESET " Raw data being appended (hex): ";
-	for (size_t i = 0; i < data.length(); i++)
-	{
-		printf("%02x ", (unsigned char)data[i]);
-	}
+	// for (size_t i = 0; i < data.length(); i++)
+	// {
+	// 	printf("%02x ", (unsigned char)data[i]);
+	// }
 	cout << endl;
 	messageBuffer += data;
 	cout << BRIGHT_BLUE "[" << __PRETTY_FUNCTION__ << "]" RESET " Current buffer: [" << messageBuffer << "]" << endl;
 }
 
+// The function's purpose is to extract all complete messages from the buffer, returning them as separate strings in a vector, while leaving incomplete messages in the buffer for future completion.
 vector<string> Client::getCompleteMessages()
 {
 	cout << BRIGHT_BLUE "[" << __PRETTY_FUNCTION__ << "]" RESET " called" << endl;
