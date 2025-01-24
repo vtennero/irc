@@ -7,11 +7,10 @@
 #include <sstream>
 
 PrivmsgCommandHandler::PrivmsgCommandHandler(Server& server) : CommandHandler(server) {}
-//do not allow registration of "*"
-// Validation helpers
+//Only allow 2 params: target and trailing(message)
 bool PrivmsgCommandHandler::validateMessageParams(const Message& message) {
-	if (message.getParams().size() < 2) {
-		cout << ORANGE "[" << __PRETTY_FUNCTION__ << "]" RESET " PRIVMSG - Not enough parameters" << endl;
+	if (message.getParams().size() != 2) {
+		cout << ORANGE "[" << __PRETTY_FUNCTION__ << "]" RESET " PRIVMSG - Wrong number of parameters" << endl;
 		return false;
 	}
 	return true;
